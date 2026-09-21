@@ -1480,6 +1480,65 @@ body.app-ready .access-gate{display:none}
   }
 }
 
+
+/* ===== Manual expense ordering ===== */
+.cardhead .head-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.order-btn{
+  border:0;
+  background:#f2f4f6;
+  color:#5f6b7a;
+  border-radius:11px;
+  padding:10px 12px;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.order-btn.active{
+  background:#191f28;
+  color:#fff;
+}
+.reorder-controls{
+  display:none;
+  align-items:center;
+  gap:4px;
+  margin-right:3px;
+}
+body.reorder-mode .reorder-controls{
+  display:flex;
+}
+.reorder-arrow{
+  width:28px;
+  height:28px;
+  border:0;
+  border-radius:8px;
+  background:#f2f4f6;
+  color:#647083;
+  display:grid;
+  place-items:center;
+  padding:0;
+  font-size:14px;
+  font-weight:900;
+  line-height:1;
+}
+.reorder-arrow:hover{background:#e8ecf1}
+.reorder-arrow:disabled{opacity:.25;cursor:default}
+body.reorder-mode .expense-title-btn,
+body.reorder-mode .status-action,
+body.reorder-mode .expense-media img{
+  pointer-events:none;
+}
+body.reorder-mode .expense{
+  background:#fbfcfd;
+}
+@media(max-width:680px){
+  .order-btn{padding:9px 10px;font-size:10.5px}
+  .reorder-arrow{width:30px;height:30px}
+}
+
 </style>
 </head>
 <body>
@@ -1520,6 +1579,7 @@ body.app-ready .access-gate{display:none}
             <div class="count" id="ledgerCount"></div>
           </div>
           <div class="head-actions">
+            <button class="order-btn" id="orderBtn" type="button">↕ 순서 편집</button>
             <button class="add-btn" id="addBtn">＋ 지출 추가</button>
           </div>
         </div>
@@ -1728,6 +1788,7 @@ var removedPhotoPaths=[];
 var participantsTouched=false;
 var realtimeChannel=null;
 var refreshTimer=null;
+var reorderMode=false;
 
 function qs(s){return document.querySelector(s)}
 function qsa(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
@@ -1856,6 +1917,7 @@ function expenseFromRow(r){
     photos:[],
     note:r.note||'',
     done:!!r.done,
+    sortOrder:Number(r.sort_order||0),
     createdAt:r.created_at
   };
 }
@@ -1874,6 +1936,7 @@ function expenseToRow(e,photoPaths){
     photos:photoPaths||[],
     note:e.note||'',
     done:!!e.done,
+    sort_order:Number(e.sortOrder||0),
     updated_at:new Date().toISOString()
   };
 }
@@ -1954,17 +2017,32 @@ function renderSummary(){
 }
 function filteredExpenses(){
   var ex=state.expenses.slice();
+
   if(activeTab.indexOf('day')===0){
-    var idx=Number(activeTab.slice(3));ex=ex.filter(function(e){return e.date===dates()[idx]});
+    var idx=Number(activeTab.slice(3));
+    ex=ex.filter(function(e){return e.date===dates()[idx]});
   }
+
   var payer=qs('#payerFilter')?qs('#payerFilter').value:'';
   var st=qs('#statusFilter')?qs('#statusFilter').value:'';
   var q=qs('#searchInput')?(qs('#searchInput').value||'').trim().toLowerCase():'';
+
   if(payer)ex=ex.filter(function(e){return e.payer===payer});
   if(st==='open')ex=ex.filter(function(e){return !e.done});
   if(st==='done')ex=ex.filter(function(e){return e.done});
-  if(q)ex=ex.filter(function(e){return ((e.title||'')+' '+(e.note||'')).toLowerCase().indexOf(q)>=0});
-  return ex.sort(function(a,b){return ((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||''))});
+  if(q)ex=ex.filter(function(e){
+    return ((e.title||'')+' '+(e.note||'')).toLowerCase().indexOf(q)>=0;
+  });
+
+  return ex.sort(function(a,b){
+    if(a.date!==b.date)return a.date.localeCompare(b.date);
+
+    var ao=Number(a.sortOrder||0);
+    var bo=Number(b.sortOrder||0);
+    if(ao!==bo)return ao-bo;
+
+    return (a.createdAt||'').localeCompare(b.createdAt||'');
+  });
 }
 function fillPayerFilter(){
   var old=qs('#payerFilter').value;
@@ -2002,7 +2080,7 @@ function expenseHTML(e){
 
   var noteText=esc(e.note||'');
 
-  return '<article class="expense '+(e.done?'done ':'')+(hasPhoto?'has-photo':'no-photo')+'">'+
+  return '<article class="expense '+(e.done?'done ':'')+(hasPhoto?'has-photo':'no-photo')+'" data-expense-id="'+e.id+'">'+
     '<div class="expense-layout">'+
       '<div class="expense-copy">'+
         '<div class="expense-titleline">'+
@@ -2024,6 +2102,10 @@ function expenseHTML(e){
             ?'<div class="exp-note"><span class="exp-note-dot">●</span><span class="exp-note-text">'+noteText+'</span></div>'
             :'')+
         '</div>'+
+      '</div>'+
+      '<div class="reorder-controls">'+
+        '<button class="reorder-arrow" data-order-action="up" data-id="'+e.id+'" type="button" title="위로">↑</button>'+
+        '<button class="reorder-arrow" data-order-action="down" data-id="'+e.id+'" type="button" title="아래로">↓</button>'+
       '</div>'+
       '<div class="expense-side">'+
         '<div class="expense-side-top">'+
@@ -2128,7 +2210,115 @@ function render(){
 
 /* ---------- Expense actions ---------- */
 
+
+function expensesForDateOrdered(date){
+  return state.expenses
+    .filter(function(e){return e.date===date})
+    .slice()
+    .sort(function(a,b){
+      var ao=Number(a.sortOrder||0),bo=Number(b.sortOrder||0);
+      if(ao!==bo)return ao-bo;
+      return (a.createdAt||'').localeCompare(b.createdAt||'');
+    });
+}
+
+async function normalizeDayOrder(date){
+  var rows=expensesForDateOrdered(date);
+
+  for(var i=0;i<rows.length;i++){
+    var r=await sb
+      .from('trip_settle_up_expenses')
+      .update({
+        sort_order:(i+1)*10,
+        updated_at:new Date().toISOString()
+      })
+      .eq('id',rows[i].id);
+
+    if(r.error)throw r.error;
+  }
+}
+
+async function moveExpense(id,direction){
+  var current=state.expenses.find(function(e){return e.id===id});
+  if(!current)return;
+
+  var rows=expensesForDateOrdered(current.date);
+  var index=rows.findIndex(function(e){return e.id===id});
+  if(index<0)return;
+
+  if(rows.some(function(e){return !Number(e.sortOrder||0)})){
+    await normalizeDayOrder(current.date);
+    await loadData(true);
+    rows=expensesForDateOrdered(current.date);
+    index=rows.findIndex(function(e){return e.id===id});
+  }
+
+  var targetIndex=direction==='up'?index-1:index+1;
+  if(targetIndex<0||targetIndex>=rows.length)return;
+
+  var a=rows[index];
+  var b=rows[targetIndex];
+  var aOrder=Number(a.sortOrder||((index+1)*10));
+  var bOrder=Number(b.sortOrder||((targetIndex+1)*10));
+
+  var r1=await sb
+    .from('trip_settle_up_expenses')
+    .update({sort_order:bOrder,updated_at:new Date().toISOString()})
+    .eq('id',a.id);
+  if(r1.error)throw r1.error;
+
+  var r2=await sb
+    .from('trip_settle_up_expenses')
+    .update({sort_order:aOrder,updated_at:new Date().toISOString()})
+    .eq('id',b.id);
+  if(r2.error)throw r2.error;
+
+  await loadData(true);
+}
+
+function updateOrderButtons(){
+  if(!reorderMode)return;
+
+  var ex=filteredExpenses();
+  var groups={};
+
+  ex.forEach(function(e){
+    if(!groups[e.date])groups[e.date]=[];
+    groups[e.date].push(e);
+  });
+
+  Object.keys(groups).forEach(function(date){
+    var rows=groups[date];
+    rows.forEach(function(e,i){
+      var up=qs('[data-order-action="up"][data-id="'+e.id+'"]');
+      var down=qs('[data-order-action="down"][data-id="'+e.id+'"]');
+      if(up)up.disabled=(i===0);
+      if(down)down.disabled=(i===rows.length-1);
+    });
+  });
+}
+
 function attachExpenseEvents(){
+  qsa('#expenseList [data-order-action]').forEach(function(btn){
+    btn.onclick=async function(ev){
+      ev.stopPropagation();
+      if(!reorderMode)return;
+
+      btn.disabled=true;
+      try{
+        await moveExpense(
+          btn.getAttribute('data-id'),
+          btn.getAttribute('data-order-action')
+        );
+      }catch(err){
+        console.error(err);
+        alert('순서를 저장하지 못했어요.\n'+(err.message||err));
+      }
+    };
+  });
+
+  updateOrderButtons();
+
   qsa('#expenseList [data-action]').forEach(function(b){
     b.onclick=async function(){
       var id=b.getAttribute('data-id');
@@ -2313,11 +2503,20 @@ qs('#expenseForm').addEventListener('submit',async function(ev){
   if(!parts.some(Boolean)){alert('정산할 사람을 한 명 이상 선택해 주세요.');return}
 
   var id=qs('#expenseId').value||uuidv4();
+  var existingExpense=state.expenses.find(function(x){return x.id===id});
+  var sameDay=expensesForDateOrdered(qs('#fDate').value);
+  var nextOrder=sameDay.length
+    ? Math.max.apply(null,sameDay.map(function(x){return Number(x.sortOrder||0)}))+10
+    : 10;
+
   var item={
     id:id,date:qs('#fDate').value,title:qs('#fTitle').value.trim(),payer:qs('#fPayer').value,
     category:qs('#fCategory').value,jpy:Number(qs('#fJPY').value||0),usd:Number(qs('#fUSD').value||0),
     krw:Number(qs('#fKRW').value||0),autoBase:qs('#fAutoBase').value,participants:parts,
-    note:qs('#fNote').value.trim(),done:qs('#fDone').checked
+    note:qs('#fNote').value.trim(),done:qs('#fDone').checked,
+    sortOrder:existingExpense&&existingExpense.date===qs('#fDate').value
+      ? Number(existingExpense.sortOrder||nextOrder)
+      : nextOrder
   };
   if(!item.jpy&&!item.usd&&!item.krw){alert('JPY, USD, KRW 중 하나 이상의 금액을 입력해 주세요.');return}
   if(item.payer==='COMMON'&&!item.jpy){alert('공금 결제는 공금 잔액 계산을 위해 JPY 금액을 입력해 주세요.');return}
@@ -2401,6 +2600,13 @@ qs('#resetBtn').onclick=async function(){
 
 /* ---------- UI events ---------- */
 
+qs('#orderBtn').onclick=function(){
+  reorderMode=!reorderMode;
+  document.body.classList.toggle('reorder-mode',reorderMode);
+  qs('#orderBtn').classList.toggle('active',reorderMode);
+  qs('#orderBtn').textContent=reorderMode?'✓ 순서 완료':'↕ 순서 편집';
+  renderLedger();
+};
 qs('#addBtn').onclick=function(){openExpense(null)};
 qs('#closeExpense').onclick=closeExpense;
 qs('#deleteExpenseBtn').onclick=async function(){
