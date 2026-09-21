@@ -3,158 +3,776 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
 <title>여행 가계부 · 정산</title>
 <style>
 :root{
-  --bg:#f5f6f8; --card:#fff; --text:#17191f; --muted:#717786; --line:#e6e8ee;
-  --accent:#2f6fed; --accent2:#eef4ff; --good:#1c8b58; --goodbg:#eaf8f1;
-  --warn:#b66a00; --warnbg:#fff5df; --bad:#cc3d4a; --badbg:#fff0f2;
-  --shadow:0 10px 30px rgba(30,40,70,.08); --radius:18px;
+  --bg:#f6f7f9;
+  --card:#ffffff;
+  --text:#191f28;
+  --sub:#8b95a1;
+  --sub2:#6b7684;
+  --line:#edf0f3;
+  --primary:#3182f6;
+  --primary-press:#1b64da;
+  --primary-soft:#eef6ff;
+  --good:#00a86b;
+  --good-soft:#eaf9f2;
+  --warn:#b7791f;
+  --warn-soft:#fff7e8;
+  --danger:#e5484d;
+  --danger-soft:#fff1f2;
+  --radius:20px;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
+  letter-spacing:-.15px;
+}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.wrap{max-width:1180px;margin:0 auto;padding:24px 18px 100px}
-.topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
-h1{font-size:28px;margin:0 0 5px}
-.sub{color:var(--muted);font-size:14px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 13px;font-weight:700;color:var(--text)}
-.btn:hover{filter:brightness(.98)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.danger{color:var(--bad);background:var(--badbg);border-color:#ffd4da}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 20px}
-.metric{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(20,30,60,.03)}
-.metric .k{font-size:12px;color:var(--muted);margin-bottom:7px}
-.metric .v{font-size:23px;font-weight:850;letter-spacing:-.4px}
-.metric .s{font-size:12px;color:var(--muted);margin-top:5px}
-.tabs{display:flex;gap:8px;overflow:auto;padding:2px 0 12px;scrollbar-width:none}
-.tab{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-weight:750;color:#565d6c}
-.tab.active{background:#17191f;color:#fff;border-color:#17191f}
+.wrap{width:min(1120px,100%);margin:0 auto;padding:24px 18px 96px}
+
+/* top */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin-bottom:18px;
+}
+.brand h1{margin:0;font-size:28px;line-height:1.2;font-weight:800;letter-spacing:-.8px}
+.brand p{margin:7px 0 0;font-size:13px;color:var(--sub)}
+.icon-btn{
+  width:42px;height:42px;border:0;background:#fff;border-radius:14px;
+  display:grid;place-items:center;font-size:18px;color:var(--sub2);
+  box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.icon-btn:hover{background:#f9fafb}
+
+/* summary */
+.summary{
+  display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:10px;margin:0 0 18px;
+}
+.metric{
+  background:#fff;border:0;border-radius:18px;padding:18px;
+}
+.metric:first-child{padding:20px}
+.metric .k{font-size:12px;color:var(--sub);font-weight:650}
+.metric .v{font-size:23px;font-weight:800;letter-spacing:-.65px;margin-top:8px}
+.metric:first-child .v{font-size:28px}
+.metric .s{font-size:11px;color:#a3abb5;margin-top:5px}
+
+/* day tabs */
+.tabs{
+  display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0 0 14px;
+}
+.tab{
+  flex:0 0 auto;border:0;background:#fff;color:var(--sub2);
+  border-radius:14px;padding:10px 13px;font-weight:700;font-size:13px;
+  white-space:nowrap;
+}
+.tab:hover{background:#f0f2f4}
+.tab.active{background:#191f28;color:#fff}
+
+/* panels */
 .panel{display:none}
 .panel.active{display:block}
-.grid2{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.cardhead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
-.cardhead h2{font-size:17px;margin:0}
-.cardbody{padding:16px 18px}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.filters select,.filters input{border:1px solid var(--line);background:#fff;padding:9px 11px;border-radius:10px}
-.expense-list{display:flex;flex-direction:column;gap:10px}
-.empty{border:1px dashed #ccd2df;border-radius:15px;padding:36px 20px;text-align:center;color:var(--muted);background:#fafbfc}
-.expense{border:1px solid var(--line);border-radius:15px;padding:14px;background:#fff}
-.expense.done{opacity:.72}
-.exp-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.exp-title{font-size:16px;font-weight:850}
-.exp-meta{color:var(--muted);font-size:12px;margin-top:4px}
-.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800;background:#f0f2f6;color:#555c6a}
-.badge.good{background:var(--goodbg);color:var(--good)}
-.badge.warn{background:var(--warnbg);color:var(--warn)}
-.badge.blue{background:var(--accent2);color:var(--accent)}
-.amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-.amt{background:#f8f9fb;border-radius:11px;padding:9px 10px}
-.amt .label{font-size:10px;color:var(--muted)}
-.amt .num{font-weight:850;margin-top:2px;font-size:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:14px}
+.card{
+  background:#fff;border:0;border-radius:20px;overflow:hidden;
+}
+.cardhead{
+  padding:19px 20px 15px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.cardhead h2{font-size:18px;margin:0;font-weight:800;letter-spacing:-.45px}
+.head-actions{display:flex;align-items:center;gap:8px}
+.count{font-size:12px;color:var(--sub);margin-top:4px}
+.add-btn{
+  border:0;background:var(--primary);color:#fff;
+  border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;
+  box-shadow:none;
+}
+.add-btn:hover{background:#2272e8}
+.add-btn:active{background:var(--primary-press)}
+.cardbody{padding:0 20px 20px}
+
+/* filters */
+.filters{
+  display:grid;grid-template-columns:155px 155px minmax(180px,1fr);
+  gap:8px;margin-bottom:14px;
+}
+.filters select,.filters input{
+  width:100%;min-width:0;border:0;background:#f5f6f8;
+  padding:11px 12px;border-radius:12px;color:var(--text);outline:none;
+}
+.filters select:focus,.filters input:focus{box-shadow:0 0 0 2px rgba(49,130,246,.12)}
+
+/* expense list */
+.expense-list{display:flex;flex-direction:column}
+.expense{
+  padding:16px 0;background:#fff;border:0;border-top:1px solid var(--line);min-width:0;
+}
+.expense:first-child{border-top:0}
+.expense:hover{box-shadow:none}
+.expense.done{opacity:.58}
+.exp-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.exp-title{font-size:16px;font-weight:800;word-break:break-word}
+.exp-meta{color:var(--sub);font-size:11px;margin-top:6px;line-height:1.55}
+.badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.badge{
+  display:inline-flex;align-items:center;border-radius:8px;padding:5px 7px;
+  font-size:10px;font-weight:750;background:#f2f4f6;color:var(--sub2)
+}
+.badge.good{background:var(--good-soft);color:var(--good)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.blue{background:var(--primary-soft);color:var(--primary)}
+.amounts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0 9px}
+.amt{background:#f8f9fa;border-radius:12px;padding:10px 11px;min-width:0}
+.amt .label{font-size:10px;color:var(--sub)}
+.amt .num{
+  font-weight:800;margin-top:3px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
 .debts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.debt{font-size:11px;background:#f5f6f8;border-radius:8px;padding:6px 8px}
-.exp-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
-.note{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
-.mini-actions{display:flex;gap:6px}
-.iconbtn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:750}
-.photos{display:flex;gap:7px;margin-top:10px}
-.photos img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer}
-.daytitle{display:flex;justify-content:space-between;align-items:end;margin:7px 2px 12px}
-.daytitle h2{margin:0;font-size:20px}
-.daytitle .small{color:var(--muted);font-size:12px}
-.person-table{width:100%;border-collapse:collapse}
-.person-table th,.person-table td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
-.person-table th:first-child,.person-table td:first-child{text-align:left}
-.person-table th{color:var(--muted);font-size:11px}
-.money-pos{color:var(--good);font-weight:850}
-.money-neg{color:var(--bad);font-weight:850}
-.settle-box{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.person-card{border:1px solid var(--line);border-radius:14px;padding:13px}
-.person-card .name{font-weight:850}
-.person-card .line{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-top:8px;color:var(--muted)}
-.person-card .line strong{color:var(--text)}
+.debt{font-size:10px;background:#f5f7f9;border-radius:8px;padding:6px 8px;color:var(--sub2)}
+.photos{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.photos img{width:64px;height:64px;object-fit:cover;border-radius:12px;border:0;cursor:pointer}
+.exp-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:11px}
+.note{font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.mini-actions{display:flex;gap:5px;flex:0 0 auto}
+.iconbtn{
+  border:0;background:#f5f6f8;border-radius:10px;padding:7px 9px;
+  font-size:11px;font-weight:750;color:var(--sub2)
+}
+.iconbtn:hover{background:#eceff2}
+.empty{
+  border:0;border-radius:16px;padding:36px 18px;text-align:center;
+  color:var(--sub);background:#f8f9fa;font-size:13px;line-height:1.65;
+}
+
+/* side summary */
+.side-k{font-size:11px;color:var(--sub)}
+.side-big{font-size:30px;font-weight:800;margin:5px 0 20px;letter-spacing:-.7px}
+.side-row{
+  display:flex;justify-content:space-between;gap:12px;padding:11px 0;
+  border-top:1px solid var(--line);font-size:12px;color:var(--sub2)
+}
+.side-row strong{color:var(--text)}
+
+/* settlement */
+.notice{
+  border-radius:14px;padding:12px 13px;font-size:12px;line-height:1.6;
+  background:#f6f8fa;color:var(--sub2)
+}
+.hr{height:1px;background:var(--line);margin:18px 0}
+.settle-box{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.person-card{border:0;border-radius:16px;padding:15px;background:#f8f9fa}
+.person-card .name{font-weight:800}
+.person-card .line{
+  display:flex;justify-content:space-between;gap:8px;font-size:11px;
+  margin-top:9px;color:var(--sub)
+}
+.person-card .line strong{color:var(--text);text-align:right}
+.money-pos{color:var(--good)!important;font-weight:800}
+.money-neg{color:var(--danger)!important;font-weight:800}
 .transfer-list{display:flex;flex-direction:column;gap:8px}
-.transfer{border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center}
-.settings-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;font-weight:800;color:#535a68}
-.field input,.field select,.field textarea{width:100%;border:1px solid #d9dde6;border-radius:11px;padding:10px 11px;background:#fff;color:var(--text)}
-.field textarea{min-height:84px;resize:vertical}
-.help{font-size:11px;color:var(--muted);line-height:1.5}
-.hr{height:1px;background:var(--line);margin:16px 0}
-.modalback{position:fixed;inset:0;background:rgba(13,18,28,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}
+.transfer{
+  border:0;border-radius:12px;padding:12px 13px;display:flex;justify-content:space-between;
+  gap:10px;align-items:center;font-size:12px;background:#f8f9fa
+}
+.person-table{width:100%;border-collapse:collapse}
+.person-table th,.person-table td{
+  padding:11px 8px;border-bottom:1px solid var(--line);text-align:right;font-size:12px
+}
+.person-table th:first-child,.person-table td:first-child{text-align:left}
+.person-table th{color:var(--sub);font-size:10px}
+
+/* modal */
+.modalback{
+  position:fixed;inset:0;background:rgba(25,31,40,.42);display:none;
+  align-items:center;justify-content:center;padding:16px;z-index:100
+}
 .modalback.open{display:flex}
-.modal{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 25px 80px rgba(0,0,0,.25)}
-.modalhead{position:sticky;top:0;background:#fff;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
-.modalhead h2{margin:0;font-size:18px}
-.modalbody{padding:17px 18px}
-.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.formgrid .full{grid-column:1/-1}
-.checks{display:flex;gap:8px;flex-wrap:wrap}
-.check{border:1px solid var(--line);border-radius:999px;padding:8px 10px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
-.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-.photo-preview{display:flex;gap:8px;flex-wrap:wrap}
-.photo-preview img{width:84px;height:84px;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
-.notice{border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;background:#f7f8fa;color:#555d6d}
-.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#17191f;color:#fff;padding:11px 14px;border-radius:999px;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:.22s;z-index:300}
-.toast.show{opacity:1}
-.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:250;display:none;align-items:center;justify-content:center;padding:24px}
+.modal{
+  width:min(760px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:22px;
+  box-shadow:0 24px 80px rgba(0,0,0,.18)
+}
+.modalhead{
+  position:sticky;top:0;z-index:4;background:#fff;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:17px 18px;border-bottom:1px solid var(--line)
+}
+.modalhead-left{min-width:0}
+.modalhead h2{margin:0;font-size:18px;font-weight:800}
+.modalhead p{margin:4px 0 0;color:var(--sub);font-size:11px}
+.modalhead-right{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.done-switch{
+  display:flex;align-items:center;gap:7px;border:0;background:#f5f6f8;
+  border-radius:11px;padding:8px 10px;font-size:11px;font-weight:750;color:var(--sub2);white-space:nowrap
+}
+.done-switch input{width:16px;height:16px;accent-color:var(--primary);margin:0}
+.close-round{
+  width:34px;height:34px;border:0;background:#f5f6f8;border-radius:11px;font-size:15px;color:var(--sub2)
+}
+.modalbody{padding:18px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field label{font-size:11px;font-weight:750;color:var(--sub2)}
+.field input,.field select,.field textarea{
+  width:100%;min-width:0;border:0;border-radius:12px;padding:12px;
+  background:#f5f6f8;color:var(--text);outline:none
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  box-shadow:0 0 0 2px rgba(49,130,246,.13)
+}
+.field textarea{min-height:90px;resize:vertical}
+.help{font-size:10px;color:var(--sub);line-height:1.5}
+.participants{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.person-chip{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  min-height:44px;padding:9px 10px;border:0;border-radius:12px;
+  background:#f5f6f8;font-size:12px;font-weight:750;color:var(--sub2);
+  text-align:center;word-break:keep-all
+}
+.person-chip input{position:absolute;opacity:0;pointer-events:none}
+.person-chip.selected{background:var(--primary-soft);color:var(--primary)}
+.photo-zone{
+  border:0;background:#f7f8fa;border-radius:16px;padding:18px;text-align:center
+}
+.photo-zone strong{display:block;font-size:13px;font-weight:750}
+.photo-zone span{display:block;font-size:10px;color:var(--sub);margin-top:5px;line-height:1.5}
+.photo-actions{display:flex;justify-content:center;gap:8px;margin-top:11px;flex-wrap:wrap}
+.soft-btn{
+  border:0;background:#fff;border-radius:10px;padding:8px 11px;font-size:11px;font-weight:750;color:var(--sub2)
+}
+.photo-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.photo-item{position:relative}
+.photo-preview img{width:92px;height:92px;border-radius:12px;object-fit:cover;border:0}
+.rmphoto{
+  position:absolute;right:-5px;top:-5px;width:24px;height:24px;border-radius:999px;
+  border:0;background:#191f28;color:#fff;font-size:14px
+}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.btn{
+  border:0;background:#f2f4f6;border-radius:12px;padding:11px 14px;
+  font-weight:800;color:var(--sub2);font-size:12px
+}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.primary:hover{background:#2272e8}
+.btn.danger{background:var(--danger-soft);color:var(--danger)}
+
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+
+.lightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:250;display:none;
+  align-items:center;justify-content:center;padding:20px
+}
 .lightbox.open{display:flex}
 .lightbox img{max-width:96vw;max-height:92vh;border-radius:12px}
-.filelabel{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12px;font-weight:800;cursor:pointer;background:#fff}
-footer{text-align:center;color:#9aa0ad;font-size:11px;margin-top:28px}
-@media(max-width:850px){
-  .summary{grid-template-columns:repeat(2,1fr)}
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  background:#191f28;color:#fff;padding:11px 14px;border-radius:999px;
+  font-size:11px;font-weight:800;opacity:0;pointer-events:none;transition:.2s;z-index:300
+}
+.toast.show{opacity:1}
+footer{text-align:center;color:#b0b7c0;font-size:10px;margin-top:26px}
+
+/* responsive */
+@media(max-width:900px){
+  .summary{grid-template-columns:1fr 1fr}
   .grid2{grid-template-columns:1fr}
   .settle-box{grid-template-columns:1fr}
 }
-@media(max-width:620px){
-  .wrap{padding:16px 12px 80px}
-  .topbar{flex-direction:column}
-  .actions{justify-content:flex-start}
-  h1{font-size:24px}
-  .summary{grid-template-columns:1fr 1fr;gap:8px}
-  .metric{padding:13px}
-  .metric .v{font-size:18px}
-  .amounts{grid-template-columns:1fr 1fr 1fr}
-  .formgrid,.settings-grid{grid-template-columns:1fr}
-  .formgrid .full{grid-column:auto}
+@media(max-width:680px){
+  .wrap{padding:14px 10px 78px}
+  .topbar{margin-bottom:14px}
+  .brand h1{font-size:22px}
+  .brand p{font-size:12px}
+  .summary{gap:8px;margin-bottom:14px}
+  .metric{padding:14px}
+  .metric:first-child{padding:14px}
+  .metric .v,.metric:first-child .v{font-size:19px}
+  .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .tab{width:100%;padding:10px 8px;text-align:center;overflow:hidden;text-overflow:ellipsis}
+  .cardhead{padding:16px 14px 13px}
+  .cardbody{padding:0 14px 14px}
+  .filters{grid-template-columns:1fr 1fr;gap:7px}
+  .filters input{grid-column:1/-1}
+  .formgrid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .settings-grid{grid-template-columns:1fr}
+  .participants{grid-template-columns:1fr 1fr 1fr}
+  .modalback{padding:0;align-items:flex-end}
+  .modal{width:100%;max-height:96vh;border-radius:22px 22px 0 0}
+  .modalbody{padding:15px}
+  .modalhead{padding:14px}
+  .modalhead h2{font-size:16px}
+  .done-switch{padding:7px 8px;font-size:10px}
+}
+@media(max-width:460px){
+  .summary{grid-template-columns:1fr 1fr}
+  .metric .k{font-size:10px}
+  .metric .v,.metric:first-child .v{font-size:17px}
+  .tab{font-size:12px}
+  .cardhead h2{font-size:16px}
+  .add-btn{padding:9px 10px;font-size:11px}
+  .expense{padding:14px 0}
   .exp-top{flex-direction:column}
   .badges{justify-content:flex-start}
-  .note{max-width:48%}
+  .amounts{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .amt{padding:8px}
+  .amt .num{font-size:12px}
+  .exp-foot{align-items:flex-end}
+  .mini-actions{flex-wrap:wrap;justify-content:flex-end}
+  .participants{grid-template-columns:1fr}
+  .person-chip{min-height:42px}
+  .modalhead-right{gap:5px}
+  .done-switch span{display:none}
 }
+
+/* Supabase PIN gate */
+.access-gate{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:#f6f7f9
+}
+.access-card{
+  width:min(390px,100%);background:#fff;border-radius:24px;padding:28px 24px;
+}
+.access-logo{
+  width:48px;height:48px;border-radius:16px;background:#eef6ff;
+  display:grid;place-items:center;font-size:23px;margin-bottom:18px
+}
+.access-card h1{font-size:24px;margin:0;font-weight:800;letter-spacing:-.6px}
+.access-card p{font-size:13px;color:#8b95a1;line-height:1.6;margin:9px 0 20px}
+.access-input{
+  width:100%;border:0;background:#f3f5f7;border-radius:14px;
+  padding:15px 16px;font-size:20px;font-weight:800;text-align:center;
+  letter-spacing:5px;outline:none
+}
+.access-input:focus{box-shadow:0 0 0 2px rgba(49,130,246,.14)}
+.access-submit{
+  width:100%;border:0;background:#3182f6;color:#fff;border-radius:14px;
+  padding:14px;margin-top:10px;font-weight:800
+}
+.access-submit:disabled{opacity:.55;cursor:default}
+.access-error{min-height:18px;font-size:11px;color:#e5484d;margin-top:9px;text-align:center}
+.access-loading{font-size:12px;color:#8b95a1;text-align:center;margin-top:10px}
+body:not(.app-ready) .wrap{display:none}
+body.app-ready .access-gate{display:none}
+.sync-dot{display:inline-flex;align-items:center;gap:5px;color:#8b95a1;font-size:10px}
+.sync-dot:before{content:"";width:6px;height:6px;border-radius:999px;background:#00a86b}
+
+
+/* =========================================================
+   Compact TripPocket redesign
+   ========================================================= */
+:root{
+  --tp-bg:#f4f7fb;
+  --tp-card:#ffffff;
+  --tp-text:#172033;
+  --tp-sub:#8290a6;
+  --tp-line:#e9eef5;
+  --tp-blue:#2f80ed;
+  --tp-blue-soft:#edf5ff;
+  --tp-green:#1fa56b;
+  --tp-green-soft:#eaf8f1;
+  --tp-gray-soft:#f5f7fa;
+}
+
+body{background:var(--tp-bg)}
+.wrap{
+  width:min(1240px,100%);
+  margin:0 auto;
+  padding:20px 16px 92px;
+}
+
+/* App shell */
+.app-layout{
+  display:grid;
+  grid-template-columns:176px minmax(0,1fr);
+  gap:16px;
+  align-items:stretch;
+}
+.desktop-sidebar{
+  background:#fff;
+  border-radius:24px;
+  min-height:calc(100vh - 40px);
+  padding:24px 14px 18px;
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:20px;
+  align-self:start;
+}
+.side-logo{
+  padding:0 10px 24px;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:-.8px;
+}
+.side-logo span{color:var(--tp-blue)}
+.side-nav{display:flex;flex-direction:column;gap:6px}
+.side-nav-btn{
+  border:0;background:transparent;color:#6f7d92;
+  border-radius:13px;padding:12px 13px;
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:800;text-align:left;
+}
+.side-nav-btn:hover{background:#f7f9fc}
+.side-nav-btn.active{background:#eef5ff;color:var(--tp-blue)}
+.side-nav-ico{
+  width:24px;height:24px;border-radius:8px;
+  display:grid;place-items:center;font-size:14px;
+}
+.side-note{
+  margin-top:auto;padding:16px 10px 6px;
+  color:#9aa7b9;font-size:11px;line-height:1.7;
+}
+
+.main-area{min-width:0}
+.tripbar{
+  min-height:64px;background:#fff;border-radius:20px;
+  padding:13px 18px;display:flex;align-items:center;
+  justify-content:space-between;gap:16px;margin-bottom:12px;
+}
+.tripbar-left{min-width:0}
+.trip-title-row{display:flex;align-items:center;gap:7px;min-width:0}
+.trip-title-row h1{
+  margin:0;font-size:15px;font-weight:900;letter-spacing:-.4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.trip-date{font-size:11px;color:var(--tp-sub);margin-top:4px}
+.tripbar-right{display:flex;align-items:center;gap:8px}
+.member-pill{
+  border:0;background:#f5f7fa;color:#66758a;
+  border-radius:999px;padding:8px 10px;font-size:11px;font-weight:800;
+}
+.icon-btn{
+  width:36px;height:36px;border:0;background:#f5f7fa;
+  border-radius:11px;box-shadow:none;
+}
+
+/* Hide old summary cards in ledger-focused redesign */
+.summary{display:none}
+
+/* Main card */
+.grid2{display:block}
+.grid2 > aside{display:none}
+.card{
+  border-radius:24px;
+  background:#fff;
+  overflow:visible;
+}
+.cardhead{
+  padding:22px 22px 12px;
+  border:0;
+}
+.cardhead h2{font-size:22px;letter-spacing:-.65px}
+.count{font-size:11px;color:#96a0af;margin-top:5px}
+.add-btn{
+  background:var(--tp-blue);border-radius:12px;
+  padding:11px 16px;font-size:12px;font-weight:900;
+  box-shadow:none;
+}
+.add-btn:hover{background:#2674da}
+.cardbody{padding:0 22px 18px}
+
+/* Day tabs */
+.tabs{
+  display:flex;flex-wrap:wrap;gap:7px;
+  margin:0 0 10px;padding:0;
+}
+.tab{
+  border:0;background:#f4f6f9;color:#738096;
+  border-radius:12px;padding:10px 16px;
+  font-size:12px;font-weight:800;
+}
+.tab.active{background:var(--tp-blue);color:#fff}
+
+/* filters */
+.filters{
+  display:grid;
+  grid-template-columns:160px 160px minmax(220px,1fr);
+  gap:8px;margin-bottom:4px;
+}
+.filters select,.filters input{
+  border:0;background:#f5f7fa;border-radius:12px;
+  padding:12px 13px;color:#354258;
+}
+
+/* Expense list */
+.expense-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.expense{
+  position:relative;
+  border:1px solid var(--tp-line)!important;
+  border-radius:18px;
+  padding:15px 16px!important;
+  background:#fff;
+  opacity:1;
+}
+.expense:first-child{border-top:1px solid var(--tp-line)!important}
+.expense.done{opacity:.68}
+.expense-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;
+  align-items:stretch;
+}
+.expense-copy{min-width:0}
+.expense-titleline{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.expense-title{font-size:15px;font-weight:900;color:var(--tp-text)}
+.expense-meta{
+  margin-top:4px;font-size:10.5px;color:var(--tp-sub);line-height:1.45;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.badges{
+  display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-start;
+  margin-top:7px;
+}
+.badge{
+  border-radius:7px;padding:4px 7px;
+  font-size:9px;font-weight:850;
+}
+.badge.blue{background:var(--tp-blue-soft);color:var(--tp-blue)}
+.badge.good{background:var(--tp-green-soft);color:var(--tp-green)}
+.badge.warn{background:#fff5e9;color:#a86b1e}
+
+.money-line{
+  display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;
+  margin-top:9px;
+}
+.yen-main{
+  font-size:26px;font-weight:950;letter-spacing:-1px;color:#101827;
+}
+.money-secondary{
+  display:flex;align-items:center;gap:9px;
+  font-size:11px;color:#6d7c91;font-weight:750;
+}
+.money-secondary span + span:before{
+  content:"";display:inline-block;width:1px;height:11px;
+  background:#d8dee7;margin-right:9px;vertical-align:-1px;
+}
+.debts{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.debt{
+  font-size:9.5px;background:#f5f8fc;
+  border-radius:7px;padding:5px 7px;color:#607188;
+}
+.exp-note{
+  margin-top:8px;display:flex;align-items:center;gap:5px;
+  color:#7f8da0;font-size:10.5px;min-width:0;
+}
+.exp-note-text{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.exp-note-pin{font-size:10px;color:#94a2b6}
+
+.expense-side{
+  display:flex;align-items:center;gap:9px;
+}
+.expense-media{
+  display:flex;align-items:center;position:relative;
+  min-width:82px;justify-content:flex-end;
+}
+.expense-media img{
+  width:82px;height:82px;object-fit:cover;
+  border-radius:13px;cursor:pointer;display:block;
+}
+.expense-media img.secondary-photo{
+  width:48px;height:48px;border-radius:10px;
+  position:absolute;right:58px;bottom:-2px;
+  border:3px solid #fff;
+}
+.expense-menu-wrap{position:relative;align-self:flex-end}
+.more-btn{
+  width:30px;height:30px;border:0;border-radius:9px;
+  background:#f6f8fa;color:#77869a;font-size:18px;
+  display:grid;place-items:center;line-height:1;
+}
+.more-btn:hover{background:#eef2f6}
+.expense-menu{
+  display:none;position:absolute;right:0;bottom:36px;
+  background:#fff;border:1px solid var(--tp-line);
+  box-shadow:0 12px 30px rgba(25,40,70,.12);
+  border-radius:12px;padding:5px;z-index:30;min-width:106px;
+}
+.expense-menu.open{display:block}
+.expense-menu .iconbtn{
+  display:block;width:100%;text-align:left;
+  background:transparent;border-radius:8px;padding:8px 9px;
+}
+.expense-menu .iconbtn:hover{background:#f5f7fa}
+.expense-menu .danger-action{color:#d75259}
+
+/* Remove old layout remnants */
+.exp-top,.amounts,.photos,.exp-foot{display:none!important}
+
+/* settlement stays tidy */
+#settlePanel .cardbody{padding:0 22px 22px}
+
+/* bottom mobile nav */
+.mobile-nav{
+  display:none;
+  position:fixed;left:0;right:0;bottom:0;z-index:70;
+  background:rgba(255,255,255,.96);
+  border-top:1px solid var(--tp-line);
+  padding:7px 14px calc(7px + env(safe-area-inset-bottom));
+}
+.mobile-nav-inner{
+  width:min(500px,100%);margin:0 auto;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+}
+.mobile-nav-btn{
+  border:0;background:transparent;color:#8794a7;
+  padding:7px 4px;border-radius:10px;
+  font-size:10px;font-weight:800;
+}
+.mobile-nav-btn span{display:block;font-size:16px;margin-bottom:2px}
+.mobile-nav-btn.active{color:var(--tp-blue)}
+
+/* responsive */
+@media(max-width:960px){
+  .app-layout{grid-template-columns:1fr}
+  .desktop-sidebar{display:none}
+}
+@media(max-width:680px){
+  .wrap{padding:0 0 78px}
+  .main-area{width:100%}
+  .tripbar{
+    margin:0;border-radius:0;padding:12px 14px;
+    min-height:60px;border-bottom:1px solid var(--tp-line);
+  }
+  .trip-title-row h1{font-size:14px}
+  .trip-date{font-size:10px}
+  .member-pill{padding:7px 9px}
+  .main-area > .tabs{
+    background:#fff;margin:0;padding:8px 12px 10px;
+    flex-wrap:nowrap;overflow:auto;scrollbar-width:none;
+  }
+  .main-area > .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:0 0 auto;padding:9px 13px;border-radius:11px;font-size:11px;
+  }
+  .card{
+    border-radius:0;background:#fff;
+  }
+  .cardhead{
+    padding:17px 15px 11px;align-items:center;
+  }
+  .cardhead h2{font-size:20px}
+  .add-btn{padding:10px 13px;font-size:11px}
+  .cardbody{padding:0 14px 12px}
+  .filters{
+    grid-template-columns:1fr 1fr;gap:7px;margin-bottom:4px;
+  }
+  .filters input{grid-column:1/-1}
+  .filters select,.filters input{padding:11px 11px;font-size:12px}
+  .expense-list{gap:8px;margin-top:12px}
+  .expense{
+    border-radius:15px;padding:13px!important;
+  }
+  .expense-layout{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px;
+  }
+  .expense-title{font-size:14px}
+  .expense-meta{font-size:9.5px;max-width:100%}
+  .badges{margin-top:6px}
+  .badge{font-size:8.5px;padding:4px 6px}
+  .money-line{gap:8px;margin-top:8px}
+  .yen-main{font-size:22px}
+  .money-secondary{font-size:10px;gap:7px}
+  .money-secondary span + span:before{margin-right:7px;height:10px}
+  .debt{font-size:9px}
+  .exp-note{font-size:9.5px;margin-top:7px}
+  .expense-media{min-width:70px}
+  .expense-media img{width:70px;height:70px;border-radius:12px}
+  .expense-media img.secondary-photo{
+    width:39px;height:39px;right:49px;border-width:2px
+  }
+  .more-btn{width:28px;height:28px}
+  .mobile-nav{display:block}
+  footer{display:none}
+}
+@media(max-width:400px){
+  .tripbar-right .icon-btn{display:none}
+  .member-pill{font-size:10px}
+  .expense{padding:12px!important}
+  .expense-layout{gap:8px}
+  .expense-media{min-width:64px}
+  .expense-media img{width:64px;height:64px}
+  .expense-media img.secondary-photo{display:none}
+  .yen-main{font-size:21px}
+  .money-secondary{font-size:9.5px}
+}
+
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="topbar">
-    <div>
-      <h1>여행 가계부 · 정산</h1>
-      <div class="sub">엔화로 쓰고 · 달러로 확인하고 · 원화로 정산하기</div>
-    </div>
-    <div class="actions">
-      <button class="btn" id="exportBtn">백업 내보내기</button>
-      <label class="btn" style="cursor:pointer">백업 불러오기<input id="importInput" type="file" accept=".json,application/json" hidden></label>
-      <button class="btn primary" id="addBtn">＋ 지출 추가</button>
-    </div>
+
+<div class="access-gate" id="accessGate">
+  <div class="access-card">
+    <div class="access-logo">✈️</div>
+    <h1>여행 정산</h1>
+    <p>우리끼리 쓰는 정산방이에요.<br>처음 한 번만 방 코드를 입력하면 이 브라우저에서는 계속 바로 들어와요.</p>
+    <form id="pinForm">
+      <input class="access-input" id="pinInput" type="password" inputmode="numeric"
+             autocomplete="off" maxlength="12" placeholder="••••••">
+      <button class="access-submit" id="pinSubmit" type="submit">입장하기</button>
+      <div class="access-error" id="pinError"></div>
+      <div class="access-loading" id="accessLoading">Supabase 연결 중…</div>
+    </form>
   </div>
+</div>
 
-  <section class="summary" id="summary"></section>
+<div class="wrap">
+  <div class="app-layout">
+    <aside class="desktop-sidebar">
+      <div class="side-logo"><span>Trip</span>Pocket</div>
+      <nav class="side-nav">
+        <button class="side-nav-btn active" id="sideLedgerBtn" type="button">
+          <span class="side-nav-ico">▣</span> 지출 내역
+        </button>
+        <button class="side-nav-btn" id="sideSettleBtn" type="button">
+          <span class="side-nav-ico">⇄</span> 정산하기
+        </button>
+        <button class="side-nav-btn" id="sideSettingsBtn" type="button">
+          <span class="side-nav-ico">⚙</span> 여행 설정
+        </button>
+      </nav>
+      <div class="side-note">좋은 여행은<br>정산까지 간단하게 ✈</div>
+    </aside>
 
-  <div class="tabs" id="tabs"></div>
+    <main class="main-area">
+      <div class="tripbar">
+        <div class="tripbar-left">
+          <div class="trip-title-row"><h1 id="appTitle">여행 가계부 · 정산</h1></div>
+          <div class="trip-date" id="tripRange"></div>
+        </div>
+        <div class="tripbar-right">
+          <div class="member-pill" id="memberCount">3명</div>
+          <button class="icon-btn" id="settingsBtn" aria-label="설정" title="설정">⚙</button>
+        </div>
+      </div>
+
+      <section class="summary" id="summary"></section>
+      <div class="tabs" id="tabs"></div>
 
   <section class="panel active" id="ledgerPanel">
     <div class="grid2">
       <div class="card">
         <div class="cardhead">
-          <h2 id="ledgerTitle">지출 내역</h2>
-          <div style="font-size:12px;color:var(--muted)" id="ledgerCount"></div>
+          <div>
+            <h2 id="ledgerTitle">지출 내역</h2>
+            <div class="count" id="ledgerCount"></div>
+          </div>
+          <div class="head-actions">
+            <button class="add-btn" id="addBtn">＋ 지출 추가</button>
+          </div>
         </div>
         <div class="cardbody">
           <div class="filters">
@@ -164,14 +782,14 @@ footer{text-align:center;color:#9aa0ad;font-size:11px;margin-top:28px}
               <option value="open">미정산만</option>
               <option value="done">정산완료만</option>
             </select>
-            <input id="searchInput" placeholder="항목/메모 검색" />
+            <input id="searchInput" placeholder="항목이나 메모 검색" />
           </div>
           <div class="expense-list" id="expenseList"></div>
         </div>
       </div>
 
       <aside class="card">
-        <div class="cardhead"><h2>현재 탭 요약</h2></div>
+        <div class="cardhead"><h2>요약</h2></div>
         <div class="cardbody" id="sideSummary"></div>
       </aside>
     </div>
@@ -182,59 +800,58 @@ footer{text-align:center;color:#9aa0ad;font-size:11px;margin-top:28px}
       <div class="cardhead"><h2>최종 정산 요약</h2></div>
       <div class="cardbody">
         <div class="notice">
-          개인 결제는 <b>원화 정산액</b> 기준으로 서로 주고받을 돈을 계산합니다.
-          공금 결제는 <b>실제 사용 엔화</b>를 참여자 수대로 나눠 각자의 공금 잔액에서 차감합니다.
+          개인 결제는 <b>미정산 항목의 원화 정산액</b>을 기준으로 계산하고,
+          공금 결제는 실제 사용한 <b>엔화</b>를 참여자 수대로 나눠 각자 공금 잔액에서 차감합니다.
         </div>
         <div class="hr"></div>
         <div class="settle-box" id="personCards"></div>
         <div class="hr"></div>
-        <h3 style="margin:0 0 10px;font-size:15px">미정산 개인결제 · 송금 최소화</h3>
+        <h3 style="margin:0 0 10px;font-size:14px">미정산 개인결제 · 송금 최소화</h3>
         <div class="transfer-list" id="transferList"></div>
         <div class="hr"></div>
-        <h3 style="margin:0 0 10px;font-size:15px">공금 개인별 잔액</h3>
-        <div id="commonTable"></div>
+        <h3 style="margin:0 0 10px;font-size:14px">공금 개인별 잔액</h3>
+        <div id="commonTable" style="overflow:auto"></div>
       </div>
     </div>
   </section>
 
-  <section class="panel" id="settingsPanel">
-    <div class="card">
-      <div class="cardhead"><h2>설정</h2></div>
-      <div class="cardbody">
-        <div class="settings-grid" id="settingsFields"></div>
-        <div class="hr"></div>
-        <div class="notice">
-          데이터와 사진은 이 브라우저에 저장됩니다. 다른 PC/브라우저로 옮길 때는 위의
-          <b>백업 내보내기 → 백업 불러오기</b>를 사용하세요. 사진은 저장 전에 자동으로 축소합니다.
-        </div>
-        <div class="form-actions">
-          <button class="btn danger" id="resetBtn">전체 데이터 초기화</button>
-          <button class="btn primary" id="saveSettingsBtn">설정 저장</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer>단일 HTML 파일 · 서버 없이 사용 가능 · 브라우저 저장</footer>
+      <footer>Supabase 동기화 · 같은 방 코드를 입력한 브라우저끼리 공유</footer>
+    </main>
+  </div>
 </div>
 
-<div class="modalback" id="modalBack">
+<nav class="mobile-nav" aria-label="하단 메뉴">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" id="mobileLedgerBtn" type="button"><span>▣</span>지출 내역</button>
+    <button class="mobile-nav-btn" id="mobileSettleBtn" type="button"><span>⇄</span>정산하기</button>
+    <button class="mobile-nav-btn" id="mobileSettingsBtn" type="button"><span>⚙</span>설정</button>
+  </div>
+</nav>
+
+<!-- Expense modal -->
+<div class="modalback" id="expenseModal">
   <div class="modal">
     <div class="modalhead">
-      <h2 id="modalTitle">지출 추가</h2>
-      <button class="iconbtn" id="closeModal">닫기</button>
+      <div class="modalhead-left">
+        <h2 id="modalTitle">지출 추가</h2>
+        <p>항목 하나씩 입력하면 정산표에 자동 반영돼요.</p>
+      </div>
+      <div class="modalhead-right">
+        <label class="done-switch"><input id="fDone" type="checkbox"><span>정산완료</span></label>
+        <button class="close-round" id="closeExpense" type="button">✕</button>
+      </div>
     </div>
     <div class="modalbody">
       <form id="expenseForm">
-        <input type="hidden" id="expenseId" />
+        <input type="hidden" id="expenseId">
         <div class="formgrid">
           <div class="field">
             <label>날짜</label>
-            <input type="date" id="fDate" required />
+            <input type="date" id="fDate" required>
           </div>
           <div class="field">
             <label>항목명</label>
-            <input id="fTitle" placeholder="예: 편의점 / 택시 / 저녁" required />
+            <input id="fTitle" placeholder="예: 편의점 / 택시 / 저녁" required>
           </div>
 
           <div class="field">
@@ -250,53 +867,50 @@ footer{text-align:center;color:#9aa0ad;font-size:11px;margin-top:28px}
           </div>
 
           <div class="field full">
-            <label>이 비용을 나눌 사람</label>
-            <div class="checks" id="participantChecks"></div>
-            <div class="help">날짜를 고르면 1일차는 기본 2명, 2~4일차는 기본 3명으로 자동 선택됩니다. 필요하면 항목별로 바꿀 수 있어요.</div>
+            <label>비용을 나눌 사람</label>
+            <div class="participants" id="participantChecks"></div>
+            <div class="help">날짜 기준 기본 인원이 자동 선택됩니다. 항목별로 자유롭게 바꿀 수 있어요.</div>
           </div>
 
           <div class="field">
             <label>실제 결제액 · JPY</label>
-            <input id="fJPY" type="number" step="1" min="0" placeholder="예: 12580" />
+            <input id="fJPY" type="number" step="1" min="0" inputmode="decimal" placeholder="예: 12580">
           </div>
           <div class="field">
             <label>명세서 표기 · USD</label>
-            <input id="fUSD" type="number" step="0.01" min="0" placeholder="비워두면 자동환산" />
+            <input id="fUSD" type="number" step="0.01" min="0" inputmode="decimal" placeholder="비워두면 자동환산">
           </div>
           <div class="field">
             <label>정산 기준 · KRW</label>
-            <input id="fKRW" type="number" step="1" min="0" placeholder="비워두면 자동환산" />
+            <input id="fKRW" type="number" step="1" min="0" inputmode="decimal" placeholder="비워두면 자동환산">
           </div>
           <div class="field">
             <label>자동 환산 기준</label>
-            <select id="fAutoBase">
-              <option value="JPY">JPY → KRW</option>
-              <option value="USD">USD → KRW</option>
-            </select>
+            <select id="fAutoBase"><option value="JPY">JPY → KRW</option><option value="USD">USD → KRW</option></select>
           </div>
 
           <div class="field full">
-            <label>사진 첨부 (최대 2장)</label>
-            <input id="fPhotos" type="file" accept="image/*" multiple />
-            <div class="help">사진은 자동 축소·압축해서 저장합니다.</div>
-            <div class="photo-preview" id="photoPreview"></div>
+            <label>사진 · 최대 2장</label>
+            <div class="photo-zone" id="photoZone" tabindex="0">
+              <strong>영수증 사진을 여기 붙여넣어도 돼요</strong>
+              <span>Ctrl+V / Cmd+V 또는 파일 선택 · 모바일은 사진 선택 사용</span>
+              <div class="photo-actions">
+                <label class="soft-btn" style="cursor:pointer">사진 선택
+                  <input id="fPhotos" type="file" accept="image/*" multiple hidden>
+                </label>
+              </div>
+              <div class="photo-preview" id="photoPreview"></div>
+            </div>
           </div>
 
           <div class="field full">
             <label>메모</label>
             <textarea id="fNote" placeholder="영수증 메모, 카드명, 환율 참고 등"></textarea>
           </div>
-
-          <div class="field full">
-            <label class="check" style="width:max-content">
-              <input id="fDone" type="checkbox" />
-              정산완료로 표시
-            </label>
-          </div>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn" id="cancelForm">취소</button>
+          <button type="button" class="btn" id="cancelExpense">취소</button>
           <button type="submit" class="btn primary">저장</button>
         </div>
       </form>
@@ -304,405 +918,833 @@ footer{text-align:center;color:#9aa0ad;font-size:11px;margin-top:28px}
   </div>
 </div>
 
+<!-- Settings modal -->
+<div class="modalback" id="settingsModal">
+  <div class="modal" style="width:min(680px,100%)">
+    <div class="modalhead">
+      <div class="modalhead-left">
+        <h2>환경 설정</h2>
+        <p>여행 인원, 공금, 환율을 바꿀 수 있어요.</p>
+      </div>
+      <button class="close-round" id="closeSettings" type="button">✕</button>
+    </div>
+    <div class="modalbody">
+      <div class="settings-grid" id="settingsFields"></div>
+      <div class="hr"></div>
+      <div class="notice">
+        설정과 지출은 Supabase에 저장됩니다. 다른 기기나 브라우저에서도 같은 방으로 들어오면 동일한 내용을 볼 수 있어요.
+      </div>
+      <div class="form-actions">
+        <button class="btn danger" id="resetBtn" type="button">전체 초기화</button>
+        <button class="btn primary" id="saveSettingsBtn" type="button">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox"><img id="lightboxImg" alt=""></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const DB_NAME = 'travel-settlement-db-v1';
-const STORE = 'kv';
-const KEY = 'state';
+(function(){
+'use strict';
 
-const defaultState = {
-  config: {
-    title: '오사카·교토 여행',
-    startDate: '2026-09-17',
-    days: 4,
-    people: ['나','동행1','동행2'],
-    firstDayCount: 2,
-    commonContribJPY: [10000,10000,10000],
-    jpy100ToKrw: 950,
-    usdToKrw: 1400
+var SUPABASE_URL = 'https://pbzwcsaveufsqbmhygon.supabase.co';
+var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_VSbCVDuAm7mA9-cmWUPUoA_2Rk4n2un';
+var BUCKET = 'trip-settle-up';
+
+var sb = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth:{
+      persistSession:true,
+      autoRefreshToken:true,
+      detectSessionInUrl:false
+    }
+  }
+);
+
+var defaultState={
+  config:{
+    title:'오사카·교토 여행',
+    startDate:'2026-09-17',
+    days:4,
+    people:['나','동행1','동행2'],
+    firstDayCount:2,
+    commonContribJPY:[10000,10000,10000],
+    jpy100ToKrw:950,
+    usdToKrw:1400
   },
-  expenses: []
+  expenses:[]
 };
 
-let state = structuredClone(defaultState);
-let activeTab = 'all';
-let editingPhotos = [];
-let participantsTouched = false;
+function clone(obj){return JSON.parse(JSON.stringify(obj))}
+var state=clone(defaultState);
+var activeTab='all';
+var editingPhotoItems=[];
+var removedPhotoPaths=[];
+var participantsTouched=false;
+var realtimeChannel=null;
+var refreshTimer=null;
 
-function openDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,1);
-    req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE); };
-    req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+function qs(s){return document.querySelector(s)}
+function qsa(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m];
   });
 }
-async function dbGet(){
-  try{
-    const db=await openDB();
-    return await new Promise((resolve,reject)=>{
-      const tx=db.transaction(STORE,'readonly'); const req=tx.objectStore(STORE).get(KEY);
-      req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
-    });
-  }catch(e){
-    const raw=localStorage.getItem(KEY); return raw?JSON.parse(raw):null;
-  }
+function won(n){return '₩'+Math.round(Number(n)||0).toLocaleString('ko-KR')}
+function yen(n){return '¥'+Math.round(Number(n)||0).toLocaleString('ja-JP')}
+function usd(n){return '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function uuidv4(){
+  if(window.crypto && crypto.randomUUID)return crypto.randomUUID();
+  var a=new Uint8Array(16);
+  crypto.getRandomValues(a);
+  a[6]=(a[6]&15)|64;a[8]=(a[8]&63)|128;
+  var h=Array.prototype.map.call(a,function(b){return b.toString(16).padStart(2,'0')}).join('');
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
 }
-async function dbSet(v){
-  try{
-    const db=await openDB();
-    await new Promise((resolve,reject)=>{
-      const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).put(v,KEY);
-      tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
-    });
-  }catch(e){
-    localStorage.setItem(KEY,JSON.stringify(v));
-  }
+function toast(msg){
+  var t=qs('#toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},1800);
 }
-async function save(){ await dbSet(state); }
-const $=s=>document.querySelector(s);
-const $$=s=>[...document.querySelectorAll(s)];
-const won=n=> '₩'+Math.round(n||0).toLocaleString('ko-KR');
-const yen=n=> '¥'+Math.round(n||0).toLocaleString('ja-JP');
-const usd=n=> '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-const uid=()=>crypto.randomUUID?crypto.randomUUID():(Date.now()+'-'+Math.random().toString(16).slice(2));
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function setPinError(msg){qs('#pinError').textContent=msg||''}
+function setAccessLoading(msg){qs('#accessLoading').textContent=msg||''}
+
+function pad2(n){return String(n).padStart(2,'0')}
+function localDateString(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
 function dates(){
-  const out=[]; const d=new Date(state.config.startDate+'T00:00:00');
-  for(let i=0;i<state.config.days;i++){const x=new Date(d);x.setDate(d.getDate()+i);out.push(x.toISOString().slice(0,10))}
+  var out=[];
+  var parts=state.config.startDate.split('-').map(Number);
+  var d=new Date(parts[0],parts[1]-1,parts[2],12,0,0);
+  for(var i=0;i<state.config.days;i++){
+    var x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+i,12,0,0);
+    out.push(localDateString(x));
+  }
   return out;
 }
-function dayIndex(date){ return dates().indexOf(date); }
-function fmtDate(d){ const x=new Date(d+'T00:00:00'); return `${x.getMonth()+1}/${x.getDate()} (${['일','월','화','수','목','금','토'][x.getDay()]})`; }
+function dayIndex(date){return dates().indexOf(date)}
+function fmtDate(d){
+  var x=new Date(d+'T12:00:00');
+  return (x.getMonth()+1)+'/'+x.getDate()+' ('+['일','월','화','수','목','금','토'][x.getDay()]+')';
+}
 function getKRW(e){
-  if(Number(e.krw)>0) return Number(e.krw);
-  if(e.autoBase==='USD' && Number(e.usd)>0) return Number(e.usd)*state.config.usdToKrw;
+  if(Number(e.krw)>0)return Number(e.krw);
+  if(e.autoBase==='USD'&&Number(e.usd)>0)return Number(e.usd)*state.config.usdToKrw;
   return Number(e.jpy||0)*(state.config.jpy100ToKrw/100);
 }
 function getUSD(e){
-  if(Number(e.usd)>0) return Number(e.usd);
-  const krw = Number(e.krw)>0 ? Number(e.krw) : Number(e.jpy||0)*(state.config.jpy100ToKrw/100);
-  return krw/state.config.usdToKrw;
+  if(Number(e.usd)>0)return Number(e.usd);
+  var krw=Number(e.krw)>0?Number(e.krw):Number(e.jpy||0)*(state.config.jpy100ToKrw/100);
+  return state.config.usdToKrw?krw/state.config.usdToKrw:0;
 }
 function isCommon(e){return e.payer==='COMMON'}
 function defaultParticipantsForDate(date){
-  const idx=dayIndex(date);
-  return state.config.people.map((_,i)=> idx===0 ? i<state.config.firstDayCount : true);
+  var idx=dayIndex(date);
+  return state.config.people.map(function(_,i){return idx===0?i<state.config.firstDayCount:true});
 }
-function includedNames(e){return e.participants.map((v,i)=>v?state.config.people[i]:null).filter(Boolean)}
+function includedNames(e){
+  return e.participants.map(function(v,i){return v?state.config.people[i]:null}).filter(Boolean);
+}
+
+/* ---------- Supabase auth / access ---------- */
+
+async function ensureAnonymousSession(){
+  var sessionResult=await sb.auth.getSession();
+  if(sessionResult.error)throw sessionResult.error;
+  if(sessionResult.data.session)return sessionResult.data.session;
+
+  var sign=await sb.auth.signInAnonymously();
+  if(sign.error)throw sign.error;
+  return sign.data.session;
+}
+async function hasRoomAccess(){
+  var r=await sb.rpc('trip_settle_up_has_access');
+  if(r.error)throw r.error;
+  return !!r.data;
+}
+async function joinRoom(pin){
+  var r=await sb.rpc('trip_settle_up_join',{p_pin:String(pin||'')});
+  if(r.error)throw r.error;
+  return !!r.data;
+}
+
+/* ---------- DB mapping ---------- */
+
+function configFromRow(r){
+  return {
+    title:r.title,
+    startDate:r.start_date,
+    days:Number(r.days),
+    people:Array.isArray(r.people)?r.people:defaultState.config.people.slice(),
+    firstDayCount:Number(r.first_day_count),
+    commonContribJPY:Array.isArray(r.common_contrib_jpy)?r.common_contrib_jpy:defaultState.config.commonContribJPY.slice(),
+    jpy100ToKrw:Number(r.jpy100_to_krw),
+    usdToKrw:Number(r.usd_to_krw)
+  };
+}
+function configToRow(c){
+  return {
+    id:'main',
+    title:c.title,
+    start_date:c.startDate,
+    days:Number(c.days),
+    people:c.people,
+    first_day_count:Number(c.firstDayCount),
+    common_contrib_jpy:c.commonContribJPY,
+    jpy100_to_krw:Number(c.jpy100ToKrw),
+    usd_to_krw:Number(c.usdToKrw),
+    updated_at:new Date().toISOString()
+  };
+}
+function expenseFromRow(r){
+  return {
+    id:r.id,
+    date:r.expense_date,
+    title:r.title,
+    payer:r.payer,
+    category:r.category||'기타',
+    jpy:Number(r.jpy||0),
+    usd:Number(r.usd||0),
+    krw:Number(r.krw||0),
+    autoBase:r.auto_base||'JPY',
+    participants:Array.isArray(r.participants)?r.participants:[],
+    photoPaths:Array.isArray(r.photos)?r.photos:[],
+    photos:[],
+    note:r.note||'',
+    done:!!r.done,
+    createdAt:r.created_at
+  };
+}
+function expenseToRow(e,photoPaths){
+  return {
+    id:e.id,
+    expense_date:e.date,
+    title:e.title,
+    payer:String(e.payer),
+    category:e.category||'기타',
+    jpy:Number(e.jpy||0),
+    usd:Number(e.usd||0),
+    krw:Number(e.krw||0),
+    auto_base:e.autoBase||'JPY',
+    participants:e.participants,
+    photos:photoPaths||[],
+    note:e.note||'',
+    done:!!e.done,
+    updated_at:new Date().toISOString()
+  };
+}
+
+async function signedUrl(path){
+  var r=await sb.storage.from(BUCKET).createSignedUrl(path,60*60*6);
+  if(r.error)return '';
+  return r.data.signedUrl;
+}
+async function hydratePhotos(expenses){
+  await Promise.all(expenses.map(async function(e){
+    e.photos=await Promise.all((e.photoPaths||[]).map(signedUrl));
+  }));
+}
+
+async function loadData(silent){
+  try{
+    var results=await Promise.all([
+      sb.from('trip_settle_up_config').select('*').eq('id','main').maybeSingle(),
+      sb.from('trip_settle_up_expenses').select('*').order('expense_date',{ascending:true}).order('created_at',{ascending:true})
+    ]);
+    var cr=results[0],er=results[1];
+    if(cr.error)throw cr.error;
+    if(er.error)throw er.error;
+
+    if(!cr.data){
+      var ins=await sb.from('trip_settle_up_config').upsert(configToRow(defaultState.config)).select().single();
+      if(ins.error)throw ins.error;
+      state.config=configFromRow(ins.data);
+    }else{
+      state.config=configFromRow(cr.data);
+    }
+
+    state.expenses=(er.data||[]).map(expenseFromRow);
+    await hydratePhotos(state.expenses);
+    render();
+    if(!silent)toast('최신 내용으로 동기화했어요');
+  }catch(err){
+    console.error(err);
+    if(!silent)alert('Supabase에서 데이터를 불러오지 못했어요.\n'+(err.message||err));
+  }
+}
+
+function scheduleRefresh(){
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(function(){loadData(true)},350);
+}
+function startRealtime(){
+  if(realtimeChannel)return;
+  realtimeChannel=sb.channel('trip-settle-up-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'trip_settle_up_config'},scheduleRefresh)
+    .on('postgres_changes',{event:'*',schema:'public',table:'trip_settle_up_expenses'},scheduleRefresh)
+    .subscribe();
+}
+
+/* ---------- Rendering ---------- */
+
 function initTabs(){
-  const ts=[['all','전체']];
-  dates().forEach((d,i)=>ts.push(['day'+i,`${i+1}일차 · ${fmtDate(d)}`]));
-  ts.push(['settle','정산 요약'],['settings','설정']);
-  $('#tabs').innerHTML=ts.map(([k,l])=>`<button class="tab ${activeTab===k?'active':''}" data-tab="${k}">${l}</button>`).join('');
-  $$('#tabs .tab').forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;render()});
+  var ts=[['all','전체']];
+  dates().forEach(function(d,i){ts.push(['day'+i,(i+1)+'일차'])});
+  ts.push(['settle','정산 요약']);
+  qs('#tabs').innerHTML=ts.map(function(x){
+    return '<button class="tab '+(activeTab===x[0]?'active':'')+'" data-tab="'+x[0]+'">'+x[1]+'</button>';
+  }).join('');
+  qsa('#tabs .tab').forEach(function(b){b.onclick=function(){activeTab=b.getAttribute('data-tab');render()}});
 }
 function renderSummary(){
-  const ex=state.expenses;
-  const totalKRW=ex.reduce((a,e)=>a+getKRW(e),0);
-  const commonInit=state.config.commonContribJPY.reduce((a,b)=>a+Number(b||0),0);
-  const commonUsed=ex.filter(isCommon).reduce((a,e)=>a+Number(e.jpy||0),0);
-  const open=ex.filter(e=>!e.done).length;
-  $('#summary').innerHTML=`
-    <div class="metric"><div class="k">전체 지출 · 원화 기준</div><div class="v">${won(totalKRW)}</div><div class="s">${ex.length}건</div></div>
-    <div class="metric"><div class="k">공금 모은 금액</div><div class="v">${yen(commonInit)}</div><div class="s">1인 기본 ${yen(10000)}</div></div>
-    <div class="metric"><div class="k">공금 남은 현금</div><div class="v">${yen(commonInit-commonUsed)}</div><div class="s">사용 ${yen(commonUsed)}</div></div>
-    <div class="metric"><div class="k">미정산 항목</div><div class="v">${open}건</div><div class="s">${ex.length-open}건 완료</div></div>`;
+  var ex=state.expenses;
+  var totalKRW=ex.reduce(function(a,e){return a+getKRW(e)},0);
+  var commonInit=state.config.commonContribJPY.reduce(function(a,b){return a+Number(b||0)},0);
+  var commonUsed=ex.filter(isCommon).reduce(function(a,e){return a+Number(e.jpy||0)},0);
+  var open=ex.filter(function(e){return !e.done}).length;
+  qs('#summary').innerHTML=
+    '<div class="metric"><div class="k">전체 지출 · 원화 기준</div><div class="v">'+won(totalKRW)+'</div><div class="s">'+ex.length+'건</div></div>'+
+    '<div class="metric"><div class="k">공금 모은 금액</div><div class="v">'+yen(commonInit)+'</div><div class="s">총 납부액</div></div>'+
+    '<div class="metric"><div class="k">공금 남은 현금</div><div class="v">'+yen(commonInit-commonUsed)+'</div><div class="s">사용 '+yen(commonUsed)+'</div></div>'+
+    '<div class="metric"><div class="k">미정산 항목</div><div class="v">'+open+'건</div><div class="s">'+(ex.length-open)+'건 완료</div></div>';
 }
 function filteredExpenses(){
-  let ex=[...state.expenses];
-  if(activeTab.startsWith('day')){
-    const idx=Number(activeTab.slice(3)); ex=ex.filter(e=>e.date===dates()[idx]);
+  var ex=state.expenses.slice();
+  if(activeTab.indexOf('day')===0){
+    var idx=Number(activeTab.slice(3));ex=ex.filter(function(e){return e.date===dates()[idx]});
   }
-  const payer=$('#payerFilter')?.value||'';
-  const st=$('#statusFilter')?.value||'';
-  const q=($('#searchInput')?.value||'').trim().toLowerCase();
-  if(payer) ex=ex.filter(e=>e.payer===payer);
-  if(st==='open') ex=ex.filter(e=>!e.done);
-  if(st==='done') ex=ex.filter(e=>e.done);
-  if(q) ex=ex.filter(e=>(e.title+' '+(e.note||'')).toLowerCase().includes(q));
-  return ex.sort((a,b)=>(b.date+a.createdAt).localeCompare(a.date+b.createdAt));
+  var payer=qs('#payerFilter')?qs('#payerFilter').value:'';
+  var st=qs('#statusFilter')?qs('#statusFilter').value:'';
+  var q=qs('#searchInput')?(qs('#searchInput').value||'').trim().toLowerCase():'';
+  if(payer)ex=ex.filter(function(e){return e.payer===payer});
+  if(st==='open')ex=ex.filter(function(e){return !e.done});
+  if(st==='done')ex=ex.filter(function(e){return e.done});
+  if(q)ex=ex.filter(function(e){return ((e.title||'')+' '+(e.note||'')).toLowerCase().indexOf(q)>=0});
+  return ex.sort(function(a,b){return ((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||''))});
 }
 function fillPayerFilter(){
-  const old=$('#payerFilter').value;
-  $('#payerFilter').innerHTML=`<option value="">결제자 전체</option>`+
-    state.config.people.map((p,i)=>`<option value="${i}">${esc(p)}</option>`).join('')+
-    `<option value="COMMON">공금</option>`;
-  $('#payerFilter').value=old;
+  var old=qs('#payerFilter').value;
+  qs('#payerFilter').innerHTML='<option value="">결제자 전체</option>'+
+    state.config.people.map(function(p,i){return '<option value="'+i+'">'+esc(p)+'</option>'}).join('')+
+    '<option value="COMMON">공금</option>';
+  qs('#payerFilter').value=old;
 }
 function expenseHTML(e){
-  const p=isCommon(e)?'공금':state.config.people[Number(e.payer)]||'미지정';
-  const people=includedNames(e);
-  const krwAmt=getKRW(e), each=people.length?krwAmt/people.length:0;
-  let debts='';
-  if(!isCommon(e) && people.length){
-    people.forEach(name=>{
-      const idx=state.config.people.indexOf(name);
-      if(String(idx)!==String(e.payer)) debts+=`<span class="debt">${esc(name)} → ${esc(p)} ${won(each)}</span>`;
+  var payer=isCommon(e)?'공금':state.config.people[Number(e.payer)]||'미지정';
+  var people=includedNames(e);
+  var krwAmt=getKRW(e);
+  var each=people.length?krwAmt/people.length:0;
+  var debts='';
+  if(!isCommon(e)&&people.length){
+    people.forEach(function(name){
+      var idx=state.config.people.indexOf(name);
+      if(String(idx)!==String(e.payer))debts+='<span class="debt">'+esc(name)+' → '+esc(payer)+' '+won(each)+'</span>';
     });
-  }else if(isCommon(e) && people.length){
-    const jEach=Number(e.jpy||0)/people.length;
-    debts=people.map(n=>`<span class="debt">${esc(n)} 공금사용 ${yen(jEach)}</span>`).join('');
+  }else if(isCommon(e)&&people.length){
+    var jEach=Number(e.jpy||0)/people.length;
+    debts=people.map(function(n){return '<span class="debt">'+esc(n)+' 공금 '+yen(jEach)+'</span>'}).join('');
   }
-  const photos=(e.photos||[]).map((src,i)=>`<img src="${src}" data-photo="${i}" data-id="${e.id}" alt="첨부사진">`).join('');
-  return `<article class="expense ${e.done?'done':''}">
-    <div class="exp-top">
-      <div>
-        <div class="exp-title">${esc(e.title)}</div>
-        <div class="exp-meta">${fmtDate(e.date)} · ${esc(e.category||'기타')} · ${esc(p)} 결제 · ${people.map(esc).join(', ')} 분담</div>
-      </div>
-      <div class="badges">
-        ${isCommon(e)?'<span class="badge warn">공금</span>':'<span class="badge blue">개인결제</span>'}
-        ${e.done?'<span class="badge good">정산완료</span>':'<span class="badge">미정산</span>'}
-      </div>
-    </div>
-    <div class="amounts">
-      <div class="amt"><div class="label">JPY</div><div class="num">${yen(e.jpy)}</div></div>
-      <div class="amt"><div class="label">USD</div><div class="num">${usd(getUSD(e))}</div></div>
-      <div class="amt"><div class="label">KRW 정산</div><div class="num">${won(krwAmt)}</div></div>
-    </div>
-    ${debts?`<div class="debts">${debts}</div>`:''}
-    ${photos?`<div class="photos">${photos}</div>`:''}
-    <div class="exp-foot">
-      <div class="note">${esc(e.note||'')}</div>
-      <div class="mini-actions">
-        <button class="iconbtn" data-action="toggle" data-id="${e.id}">${e.done?'미정산으로':'정산완료'}</button>
-        <button class="iconbtn" data-action="edit" data-id="${e.id}">수정</button>
-        <button class="iconbtn" data-action="delete" data-id="${e.id}">삭제</button>
-      </div>
-    </div>
-  </article>`;
+
+  var photoHTML='';
+  var photoList=(e.photos||[]).filter(Boolean);
+  if(photoList.length){
+    photoHTML='<div class="expense-media">'+
+      '<img src="'+photoList[0]+'" data-photo="0" data-id="'+e.id+'" alt="첨부사진">'+
+      (photoList[1]?'<img class="secondary-photo" src="'+photoList[1]+'" data-photo="1" data-id="'+e.id+'" alt="첨부사진">':'')+
+      '</div>';
+  }
+
+  var noteText=esc(e.note||'');
+  return '<article class="expense '+(e.done?'done':'')+'">'+
+    '<div class="expense-layout">'+
+      '<div class="expense-copy">'+
+        '<div class="expense-titleline">'+
+          '<div class="expense-title">'+esc(e.title)+'</div>'+
+        '</div>'+
+        '<div class="expense-meta">'+fmtDate(e.date)+' · '+esc(e.category||'기타')+' · '+esc(payer)+' 결제 · '+people.map(esc).join(', ')+' 분담</div>'+
+        '<div class="badges">'+
+          (isCommon(e)?'<span class="badge warn">공금</span>':'<span class="badge blue">개인결제</span>')+
+          (e.done?'<span class="badge good">정산완료</span>':'<span class="badge">미정산</span>')+
+        '</div>'+
+        '<div class="money-line">'+
+          '<div class="yen-main">'+yen(e.jpy)+'</div>'+
+          '<div class="money-secondary"><span>'+usd(getUSD(e))+'</span><span>'+won(krwAmt)+'</span></div>'+
+        '</div>'+
+        (debts?'<div class="debts">'+debts+'</div>':'')+
+        (noteText?'<div class="exp-note"><span class="exp-note-pin">●</span><span class="exp-note-text">'+noteText+'</span></div>':'')+
+      '</div>'+
+      '<div class="expense-side">'+
+        photoHTML+
+        '<div class="expense-menu-wrap">'+
+          '<button class="more-btn" type="button" data-menu-id="'+e.id+'" aria-label="더보기">⋯</button>'+
+          '<div class="expense-menu" data-menu-for="'+e.id+'">'+
+            '<button class="iconbtn" data-action="toggle" data-id="'+e.id+'">'+(e.done?'미정산으로':'정산완료')+'</button>'+
+            '<button class="iconbtn" data-action="edit" data-id="'+e.id+'">수정</button>'+
+            '<button class="iconbtn danger-action" data-action="delete" data-id="'+e.id+'">삭제</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</article>';
 }
 function renderLedger(){
-  $('#ledgerPanel').classList.toggle('active',activeTab==='all'||activeTab.startsWith('day'));
-  $('#settlePanel').classList.toggle('active',activeTab==='settle');
-  $('#settingsPanel').classList.toggle('active',activeTab==='settings');
-  if(!(activeTab==='all'||activeTab.startsWith('day'))) return;
+  var show=activeTab==='all'||activeTab.indexOf('day')===0;
+  qs('#ledgerPanel').classList.toggle('active',show);
+  qs('#settlePanel').classList.toggle('active',activeTab==='settle');
+  if(!show)return;
   fillPayerFilter();
-  const ex=filteredExpenses();
-  $('#ledgerTitle').textContent=activeTab==='all'?'전체 지출 내역':`${Number(activeTab.slice(3))+1}일차 지출`;
-  $('#ledgerCount').textContent=`${ex.length}건`;
-  $('#expenseList').innerHTML=ex.length?ex.map(expenseHTML).join(''):`<div class="empty">아직 입력된 지출이 없어요.<br>위의 <b>＋ 지출 추가</b>로 시작하세요.</div>`;
-  const total=ex.reduce((a,e)=>a+getKRW(e),0);
-  const common=ex.filter(isCommon).reduce((a,e)=>a+Number(e.jpy||0),0);
-  const byPayer=state.config.people.map((p,i)=>[p,ex.filter(e=>String(e.payer)===String(i)).reduce((a,e)=>a+getKRW(e),0)]);
-  $('#sideSummary').innerHTML=`
-    <div style="font-size:12px;color:var(--muted)">원화 기준 합계</div>
-    <div style="font-size:28px;font-weight:900;margin:4px 0 15px">${won(total)}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">공금 사용</div>
-    <div style="font-size:18px;font-weight:850;margin-bottom:15px">${yen(common)}</div>
-    ${byPayer.map(([p,v])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--line);font-size:12px"><span>${esc(p)} 개인결제</span><strong>${won(v)}</strong></div>`).join('')}
-  `;
+  var ex=filteredExpenses();
+  qs('#ledgerTitle').textContent=activeTab==='all'?'전체 지출 내역':(Number(activeTab.slice(3))+1)+'일차 지출';
+  qs('#ledgerCount').textContent=ex.length+'건';
+  qs('#expenseList').innerHTML=ex.length?ex.map(expenseHTML).join(''):'<div class="empty">아직 입력된 지출이 없어요.<br><b>＋ 지출 추가</b>로 시작하세요.</div>';
+
+  var total=ex.reduce(function(a,e){return a+getKRW(e)},0);
+  var common=ex.filter(isCommon).reduce(function(a,e){return a+Number(e.jpy||0)},0);
+  var byPayer=state.config.people.map(function(p,i){
+    return [p,ex.filter(function(e){return String(e.payer)===String(i)}).reduce(function(a,e){return a+getKRW(e)},0)];
+  });
+  qs('#sideSummary').innerHTML=
+    '<div class="side-k">원화 기준 합계</div><div class="side-big">'+won(total)+'</div>'+
+    '<div class="side-k">공금 사용</div><div style="font-size:18px;font-weight:900;margin:4px 0 15px">'+yen(common)+'</div>'+
+    byPayer.map(function(x){return '<div class="side-row"><span>'+esc(x[0])+' 개인결제</span><strong>'+won(x[1])+'</strong></div>'}).join('');
   attachExpenseEvents();
 }
 function personalBalances(){
-  const bal=state.config.people.map(()=>0);
-  state.expenses.filter(e=>!isCommon(e) && !e.done).forEach(e=>{
-    const amt=getKRW(e); const ids=e.participants.map((v,i)=>v?i:null).filter(v=>v!==null);
-    if(!ids.length) return;
-    const share=amt/ids.length;
-    const payer=Number(e.payer);
-    bal[payer]+=amt;
-    ids.forEach(i=>bal[i]-=share);
+  var bal=state.config.people.map(function(){return 0});
+  state.expenses.filter(function(e){return !isCommon(e)&&!e.done}).forEach(function(e){
+    var amt=getKRW(e);
+    var ids=e.participants.map(function(v,i){return v?i:null}).filter(function(v){return v!==null});
+    if(!ids.length)return;
+    var share=amt/ids.length,payer=Number(e.payer);
+    bal[payer]+=amt;ids.forEach(function(i){bal[i]-=share});
   });
   return bal;
 }
 function commonUsage(){
-  const usage=state.config.people.map(()=>0);
-  state.expenses.filter(isCommon).forEach(e=>{
-    const ids=e.participants.map((v,i)=>v?i:null).filter(v=>v!==null);
-    if(!ids.length) return;
-    const share=Number(e.jpy||0)/ids.length;
-    ids.forEach(i=>usage[i]+=share);
+  var usage=state.config.people.map(function(){return 0});
+  state.expenses.filter(isCommon).forEach(function(e){
+    var ids=e.participants.map(function(v,i){return v?i:null}).filter(function(v){return v!==null});
+    if(!ids.length)return;
+    var share=Number(e.jpy||0)/ids.length;ids.forEach(function(i){usage[i]+=share});
   });
   return usage;
 }
 function minimizeTransfers(bal){
-  const creds=[], debts=[];
-  bal.forEach((v,i)=>{ if(v>0.5) creds.push({i,v}); else if(v<-.5) debts.push({i,v:-v}); });
-  const out=[]; let a=0,b=0;
-  while(a<debts.length && b<creds.length){
-    const x=Math.min(debts[a].v,creds[b].v);
+  var creds=[],debts=[],out=[],a=0,b=0;
+  bal.forEach(function(v,i){if(v>.5)creds.push({i:i,v:v});else if(v<-.5)debts.push({i:i,v:-v})});
+  while(a<debts.length&&b<creds.length){
+    var x=Math.min(debts[a].v,creds[b].v);
     out.push({from:debts[a].i,to:creds[b].i,amt:x});
-    debts[a].v-=x; creds[b].v-=x;
-    if(debts[a].v<.5)a++; if(creds[b].v<.5)b++;
+    debts[a].v-=x;creds[b].v-=x;
+    if(debts[a].v<.5)a++;if(creds[b].v<.5)b++;
   }
   return out;
 }
 function renderSettlement(){
-  if(activeTab!=='settle') return;
-  const bal=personalBalances();
-  const usage=commonUsage();
-  $('#personCards').innerHTML=state.config.people.map((p,i)=>{
-    const paid=state.expenses.filter(e=>String(e.payer)===String(i)).reduce((a,e)=>a+getKRW(e),0);
-    const own=state.expenses.filter(e=>!isCommon(e)&&e.participants[i]).reduce((a,e)=>{
-      const n=e.participants.filter(Boolean).length;return a+(n?getKRW(e)/n:0)},0);
-    const cRemain=Number(state.config.commonContribJPY[i]||0)-usage[i];
-    return `<div class="person-card">
-      <div class="name">${esc(p)}</div>
-      <div class="line"><span>개인결제 총액</span><strong>${won(paid)}</strong></div>
-      <div class="line"><span>개인결제 본인 몫</span><strong>${won(own)}</strong></div>
-      <div class="line"><span>남은 개인정산</span><strong class="${bal[i]>=0?'money-pos':'money-neg'}">${bal[i]>=0?'받을 돈 ':'보낼 돈 '}${won(Math.abs(bal[i]))}</strong></div>
-      <div class="line"><span>공금 사용 몫</span><strong>${yen(usage[i])}</strong></div>
-      <div class="line"><span>공금 잔액</span><strong class="${cRemain>=0?'money-pos':'money-neg'}">${yen(cRemain)}</strong></div>
-    </div>`;
+  if(activeTab!=='settle')return;
+  var bal=personalBalances(),usage=commonUsage();
+  qs('#personCards').innerHTML=state.config.people.map(function(p,i){
+    var paid=state.expenses.filter(function(e){return String(e.payer)===String(i)}).reduce(function(a,e){return a+getKRW(e)},0);
+    var own=state.expenses.filter(function(e){return !isCommon(e)&&e.participants[i]}).reduce(function(a,e){
+      var n=e.participants.filter(Boolean).length;return a+(n?getKRW(e)/n:0);
+    },0);
+    var remain=Number(state.config.commonContribJPY[i]||0)-usage[i];
+    return '<div class="person-card"><div class="name">'+esc(p)+'</div>'+
+      '<div class="line"><span>개인결제 총액</span><strong>'+won(paid)+'</strong></div>'+
+      '<div class="line"><span>개인결제 본인 몫</span><strong>'+won(own)+'</strong></div>'+
+      '<div class="line"><span>남은 개인정산</span><strong class="'+(bal[i]>=0?'money-pos':'money-neg')+'">'+(bal[i]>=0?'받을 돈 ':'보낼 돈 ')+won(Math.abs(bal[i]))+'</strong></div>'+
+      '<div class="line"><span>공금 사용 몫</span><strong>'+yen(usage[i])+'</strong></div>'+
+      '<div class="line"><span>공금 잔액</span><strong class="'+(remain>=0?'money-pos':'money-neg')+'">'+yen(remain)+'</strong></div></div>';
   }).join('');
-  const transfers=minimizeTransfers(bal);
-  $('#transferList').innerHTML=transfers.length?transfers.map(t=>`<div class="transfer"><div><b>${esc(state.config.people[t.from])}</b> → <b>${esc(state.config.people[t.to])}</b></div><strong>${won(t.amt)}</strong></div>`).join(''):`<div class="empty" style="padding:20px">개인결제 기준 서로 보낼 돈이 없어요.</div>`;
-  const rows=state.config.people.map((p,i)=>{
-    const contrib=Number(state.config.commonContribJPY[i]||0), remain=contrib-usage[i], krwEq=remain*(state.config.jpy100ToKrw/100);
-    return `<tr><td>${esc(p)}</td><td>${yen(contrib)}</td><td>${yen(usage[i])}</td><td class="${remain>=0?'money-pos':'money-neg'}">${yen(remain)}</td><td>${won(krwEq)}</td></tr>`;
+  var transfers=minimizeTransfers(bal);
+  qs('#transferList').innerHTML=transfers.length?transfers.map(function(t){
+    return '<div class="transfer"><div><b>'+esc(state.config.people[t.from])+'</b> → <b>'+esc(state.config.people[t.to])+'</b></div><strong>'+won(t.amt)+'</strong></div>';
+  }).join(''):'<div class="empty" style="padding:20px">개인결제 기준 서로 보낼 돈이 없어요.</div>';
+
+  var rows=state.config.people.map(function(p,i){
+    var contrib=Number(state.config.commonContribJPY[i]||0),remain=contrib-usage[i],krwEq=remain*(state.config.jpy100ToKrw/100);
+    return '<tr><td>'+esc(p)+'</td><td>'+yen(contrib)+'</td><td>'+yen(usage[i])+'</td><td class="'+(remain>=0?'money-pos':'money-neg')+'">'+yen(remain)+'</td><td>'+won(krwEq)+'</td></tr>';
   }).join('');
-  $('#commonTable').innerHTML=`<table class="person-table"><thead><tr><th>사람</th><th>낸 공금</th><th>사용 몫</th><th>남은/추가</th><th>원화 환산</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-function renderSettings(){
-  if(activeTab!=='settings') return;
-  const c=state.config;
-  $('#settingsFields').innerHTML=`
-    <div class="field"><label>여행 이름</label><input id="sTitle" value="${esc(c.title)}"></div>
-    <div class="field"><label>여행 시작일</label><input id="sStart" type="date" value="${c.startDate}"></div>
-    <div class="field"><label>총 일수</label><input id="sDays" type="number" min="1" max="14" value="${c.days}"></div>
-    <div class="field"><label>1일차 기본 정산 인원</label><input id="sFirstCount" type="number" min="1" max="${c.people.length}" value="${c.firstDayCount}"></div>
-    ${c.people.map((p,i)=>`
-      <div class="field"><label>사람 ${i+1} 이름</label><input id="sPerson${i}" value="${esc(p)}"></div>
-      <div class="field"><label>${esc(p)} 공금 납부액 (JPY)</label><input id="sContrib${i}" type="number" min="0" step="1" value="${Number(c.commonContribJPY[i]||0)}"></div>`).join('')}
-    <div class="field"><label>환율 · 100 JPY = KRW</label><input id="sJPYRate" type="number" min="0" step="0.01" value="${c.jpy100ToKrw}"><div class="help">예: 950 입력 → ¥100 = ₩950</div></div>
-    <div class="field"><label>환율 · 1 USD = KRW</label><input id="sUSDRate" type="number" min="0" step="0.01" value="${c.usdToKrw}"><div class="help">예: 1400 입력 → $1 = ₩1,400</div></div>`;
+  qs('#commonTable').innerHTML='<table class="person-table"><thead><tr><th>사람</th><th>낸 공금</th><th>사용 몫</th><th>남은/추가</th><th>원화 환산</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 function render(){
-  initTabs(); renderSummary();
-  renderLedger(); renderSettlement(); renderSettings();
+  qs('#appTitle').textContent=state.config.title||'여행 가계부 · 정산';
+  var ds=dates();
+  if(qs('#tripRange'))qs('#tripRange').textContent=(ds.length?fmtDate(ds[0]):'')+(ds.length>1?' ~ '+fmtDate(ds[ds.length-1]):'');
+  if(qs('#memberCount'))qs('#memberCount').textContent=state.config.people.length+'명';
+
+  var ledgerActive=(activeTab==='all'||activeTab.indexOf('day')===0);
+  if(qs('#sideLedgerBtn'))qs('#sideLedgerBtn').classList.toggle('active',ledgerActive);
+  if(qs('#sideSettleBtn'))qs('#sideSettleBtn').classList.toggle('active',activeTab==='settle');
+  if(qs('#mobileLedgerBtn'))qs('#mobileLedgerBtn').classList.toggle('active',ledgerActive);
+  if(qs('#mobileSettleBtn'))qs('#mobileSettleBtn').classList.toggle('active',activeTab==='settle');
+  if(qs('#mobileSettingsBtn'))qs('#mobileSettingsBtn').classList.remove('active');
+
+  initTabs();renderSummary();renderLedger();renderSettlement();
 }
+
+/* ---------- Expense actions ---------- */
+
 function attachExpenseEvents(){
-  $$('#expenseList [data-action]').forEach(b=>b.onclick=async()=>{
-    const e=state.expenses.find(x=>x.id===b.dataset.id); if(!e)return;
-    if(b.dataset.action==='toggle'){e.done=!e.done;await save();render();toast(e.done?'정산완료 처리했어요':'미정산으로 되돌렸어요')}
-    if(b.dataset.action==='edit') openExpense(e);
-    if(b.dataset.action==='delete'){
-      if(confirm(`"${e.title}" 항목을 삭제할까요?`)){state.expenses=state.expenses.filter(x=>x.id!==e.id);await save();render();toast('삭제했어요')}
-    }
+  qsa('#expenseList [data-menu-id]').forEach(function(btn){
+    btn.onclick=function(ev){
+      ev.stopPropagation();
+      var id=btn.getAttribute('data-menu-id');
+      qsa('#expenseList .expense-menu').forEach(function(menu){
+        if(menu.getAttribute('data-menu-for')===id){
+          menu.classList.toggle('open');
+        }else{
+          menu.classList.remove('open');
+        }
+      });
+    };
   });
-  $$('#expenseList img[data-photo]').forEach(img=>img.onclick=()=>{
-    $('#lightboxImg').src=img.src; $('#lightbox').classList.add('open');
+  qsa('#expenseList .expense-menu').forEach(function(menu){
+    menu.onclick=function(ev){ev.stopPropagation()};
+  });
+  qsa('#expenseList [data-action]').forEach(function(b){
+    b.onclick=async function(){
+      var id=b.getAttribute('data-id');
+      var e=state.expenses.find(function(x){return x.id===id});
+      if(!e)return;
+      var action=b.getAttribute('data-action');
+      try{
+        if(action==='toggle'){
+          var r=await sb.from('trip_settle_up_expenses')
+            .update({done:!e.done,updated_at:new Date().toISOString()})
+            .eq('id',id);
+          if(r.error)throw r.error;
+          await loadData(true);
+          toast(!e.done?'정산완료 처리했어요':'미정산으로 되돌렸어요');
+        }else if(action==='edit'){
+          openExpense(e);
+        }else if(action==='delete'){
+          if(confirm('"'+e.title+'" 항목을 삭제할까요?')){
+            if((e.photoPaths||[]).length){
+              var sr=await sb.storage.from(BUCKET).remove(e.photoPaths);
+              if(sr.error)console.warn(sr.error);
+            }
+            var dr=await sb.from('trip_settle_up_expenses').delete().eq('id',id);
+            if(dr.error)throw dr.error;
+            await loadData(true);toast('삭제했어요');
+          }
+        }
+      }catch(err){
+        console.error(err);alert('처리하지 못했어요.\n'+(err.message||err));
+      }
+    };
+  });
+  qsa('#expenseList img[data-photo]').forEach(function(img){
+    img.onclick=function(){qs('#lightboxImg').src=img.src;qs('#lightbox').classList.add('open')};
   });
 }
+
 function fillFormPeople(){
-  $('#fPayer').innerHTML=state.config.people.map((p,i)=>`<option value="${i}">${esc(p)}</option>`).join('')+`<option value="COMMON">공금</option>`;
-  $('#participantChecks').innerHTML=state.config.people.map((p,i)=>`<label class="check"><input type="checkbox" data-p="${i}"> ${esc(p)}</label>`).join('');
+  qs('#fPayer').innerHTML=state.config.people.map(function(p,i){return '<option value="'+i+'">'+esc(p)+'</option>'}).join('')+'<option value="COMMON">공금</option>';
+  qs('#participantChecks').innerHTML=state.config.people.map(function(p,i){
+    return '<label class="person-chip" data-chip="'+i+'"><input type="checkbox" data-p="'+i+'"><span>'+esc(p)+'</span></label>';
+  }).join('');
+  refreshChips();
+}
+function refreshChips(){
+  qsa('#participantChecks .person-chip').forEach(function(chip){
+    chip.classList.toggle('selected',!!chip.querySelector('input').checked);
+  });
 }
 function updateParticipantDefaults(){
-  if(participantsTouched) return;
-  const arr=defaultParticipantsForDate($('#fDate').value);
-  $$('#participantChecks input').forEach((x,i)=>x.checked=arr[i]);
+  if(participantsTouched)return;
+  var arr=defaultParticipantsForDate(qs('#fDate').value);
+  qsa('#participantChecks input').forEach(function(x,i){x.checked=arr[i]});
+  refreshChips();
 }
-function openExpense(e=null){
-  fillFormPeople(); participantsTouched=!!e;
-  $('#modalTitle').textContent=e?'지출 수정':'지출 추가';
-  $('#expenseId').value=e?.id||'';
-  $('#fDate').value=e?.date||(activeTab.startsWith('day')?dates()[Number(activeTab.slice(3))]:dates()[0]);
-  $('#fTitle').value=e?.title||'';
-  $('#fPayer').value=e?.payer??'0';
-  $('#fCategory').value=e?.category||'식비';
-  $('#fJPY').value=e?.jpy??'';
-  $('#fUSD').value=e?.usd??'';
-  $('#fKRW').value=e?.krw??'';
-  $('#fAutoBase').value=e?.autoBase||'JPY';
-  $('#fNote').value=e?.note||'';
-  $('#fDone').checked=!!e?.done;
-  editingPhotos=[...(e?.photos||[])];
+function openExpense(e){
+  fillFormPeople();participantsTouched=!!e;
+  qs('#modalTitle').textContent=e?'지출 수정':'지출 추가';
+  qs('#expenseId').value=e?e.id:'';
+  qs('#fDate').value=e?e.date:(activeTab.indexOf('day')===0?dates()[Number(activeTab.slice(3))]:dates()[0]);
+  qs('#fTitle').value=e?e.title:'';
+  qs('#fPayer').value=e?e.payer:'0';
+  qs('#fCategory').value=e?(e.category||'식비'):'식비';
+  qs('#fJPY').value=e&&e.jpy?e.jpy:'';
+  qs('#fUSD').value=e&&e.usd?e.usd:'';
+  qs('#fKRW').value=e&&e.krw?e.krw:'';
+  qs('#fAutoBase').value=e?(e.autoBase||'JPY'):'JPY';
+  qs('#fNote').value=e?(e.note||''):'';
+  qs('#fDone').checked=!!(e&&e.done);
+  removedPhotoPaths=[];
+  editingPhotoItems=[];
   if(e){
-    $$('#participantChecks input').forEach((x,i)=>x.checked=!!e.participants[i]);
-  }else updateParticipantDefaults();
+    (e.photoPaths||[]).forEach(function(path,i){
+      editingPhotoItems.push({path:path,preview:(e.photos||[])[i]||'',file:null,newPhoto:false});
+    });
+    qsa('#participantChecks input').forEach(function(x,i){x.checked=!!e.participants[i]});
+    refreshChips();
+  }else{
+    updateParticipantDefaults();
+  }
   renderPhotoPreview();
-  $('#fPhotos').value='';
-  $('#modalBack').classList.add('open');
+  qs('#fPhotos').value='';
+  qs('#expenseModal').classList.add('open');
 }
-function closeExpense(){ $('#modalBack').classList.remove('open'); }
+function closeExpense(){qs('#expenseModal').classList.remove('open')}
+
 function renderPhotoPreview(){
-  $('#photoPreview').innerHTML=editingPhotos.map((src,i)=>`<div style="position:relative"><img src="${src}"><button type="button" class="iconbtn" data-rmphoto="${i}" style="position:absolute;right:-5px;top:-5px;padding:3px 6px;background:#fff">×</button></div>`).join('');
-  $$('[data-rmphoto]').forEach(b=>b.onclick=()=>{editingPhotos.splice(Number(b.dataset.rmphoto),1);renderPhotoPreview()});
+  qs('#photoPreview').innerHTML=editingPhotoItems.map(function(item,i){
+    return '<div class="photo-item"><img src="'+item.preview+'"><button type="button" class="rmphoto" data-rmphoto="'+i+'">×</button></div>';
+  }).join('');
+  qsa('[data-rmphoto]').forEach(function(b){
+    b.onclick=function(){
+      var idx=Number(b.getAttribute('data-rmphoto'));
+      var item=editingPhotoItems[idx];
+      if(item&&item.path)removedPhotoPaths.push(item.path);
+      if(item&&item.newPhoto&&item.preview&&item.preview.indexOf('blob:')===0)URL.revokeObjectURL(item.preview);
+      editingPhotoItems.splice(idx,1);
+      renderPhotoPreview();
+    };
+  });
 }
 async function compressImage(file){
-  const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
-  const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=data});
-  const max=1200, scale=Math.min(1,max/Math.max(img.width,img.height));
-  const c=document.createElement('canvas'); c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+  var data=await new Promise(function(resolve,reject){
+    var r=new FileReader();r.onload=function(){resolve(r.result)};r.onerror=reject;r.readAsDataURL(file);
+  });
+  var img=await new Promise(function(resolve,reject){
+    var im=new Image();im.onload=function(){resolve(im)};im.onerror=reject;im.src=data;
+  });
+  var max=1400,scale=Math.min(1,max/Math.max(img.width,img.height));
+  var c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(img.width*scale));
+  c.height=Math.max(1,Math.round(img.height*scale));
   c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-  return c.toDataURL('image/jpeg',.72);
+
+  var blob=await new Promise(function(resolve){
+    c.toBlob(function(b){resolve(b)},'image/jpeg',.78);
+  });
+  if(!blob)blob=file;
+  var outFile=new File([blob],'receipt-'+Date.now()+'.jpg',{type:blob.type||'image/jpeg'});
+  return {path:null,preview:URL.createObjectURL(blob),file:outFile,newPhoto:true};
 }
-$('#fPhotos').addEventListener('change',async e=>{
-  const files=[...e.target.files].slice(0,2-editingPhotos.length);
-  for(const f of files) editingPhotos.push(await compressImage(f));
-  if([...e.target.files].length>files.length) toast('사진은 항목당 최대 2장까지예요');
+async function addImageFiles(files){
+  var imageFiles=files.filter(function(f){return f&&f.type&&f.type.indexOf('image/')===0});
+  var room=2-editingPhotoItems.length;
+  if(room<=0){toast('사진은 최대 2장까지예요');return}
+  var use=imageFiles.slice(0,room);
+  for(var i=0;i<use.length;i++)editingPhotoItems.push(await compressImage(use[i]));
+  if(imageFiles.length>room)toast('사진은 최대 2장까지예요');
   renderPhotoPreview();
-});
-$('#fDate').addEventListener('change',()=>{participantsTouched=false;updateParticipantDefaults()});
-$('#participantChecks').addEventListener('change',()=>participantsTouched=true);
-$('#expenseForm').addEventListener('submit',async ev=>{
-  ev.preventDefault();
-  const parts=$$('#participantChecks input').map(x=>x.checked);
-  if(!parts.some(Boolean)){alert('정산할 사람을 한 명 이상 선택해 주세요.');return}
-  const id=$('#expenseId').value||uid();
-  const old=state.expenses.find(x=>x.id===id);
-  const item={
-    id, date:$('#fDate').value,title:$('#fTitle').value.trim(),payer:$('#fPayer').value,
-    category:$('#fCategory').value,jpy:Number($('#fJPY').value||0),usd:Number($('#fUSD').value||0),
-    krw:Number($('#fKRW').value||0),autoBase:$('#fAutoBase').value,participants:parts,
-    photos:editingPhotos,note:$('#fNote').value.trim(),done:$('#fDone').checked,
-    createdAt:old?.createdAt||new Date().toISOString()
-  };
-  if(!item.jpy && !item.usd && !item.krw){alert('JPY, USD, KRW 중 하나 이상의 금액을 입력해 주세요.');return}
-  if(item.payer==='COMMON' && !item.jpy){alert('공금 결제는 공금 잔액 계산을 위해 JPY 금액을 입력해 주세요.');return}
-  const idx=state.expenses.findIndex(x=>x.id===id);
-  if(idx>=0)state.expenses[idx]=item;else state.expenses.push(item);
-  await save(); closeExpense(); render(); toast(idx>=0?'수정했어요':'지출을 추가했어요');
-});
-$('#addBtn').onclick=()=>openExpense();
-$('#closeModal').onclick=closeExpense; $('#cancelForm').onclick=closeExpense;
-$('#modalBack').addEventListener('click',e=>{if(e.target===$('#modalBack'))closeExpense()});
-$('#lightbox').onclick=()=>$('#lightbox').classList.remove('open');
-['payerFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener('change',renderLedger));
-$('#searchInput').addEventListener('input',renderLedger);
-
-$('#saveSettingsBtn').onclick=async()=>{
-  const c=state.config;
-  c.title=$('#sTitle').value.trim()||'여행';
-  c.startDate=$('#sStart').value;
-  c.days=Math.max(1,Number($('#sDays').value||4));
-  c.firstDayCount=Math.min(c.people.length,Math.max(1,Number($('#sFirstCount').value||2)));
-  c.people=c.people.map((_,i)=>$('#sPerson'+i).value.trim()||`사람${i+1}`);
-  c.commonContribJPY=c.people.map((_,i)=>Number($('#sContrib'+i).value||0));
-  c.jpy100ToKrw=Number($('#sJPYRate').value||0);
-  c.usdToKrw=Number($('#sUSDRate').value||0);
-  await save(); render(); toast('설정을 저장했어요');
-};
-$('#resetBtn').onclick=async()=>{
-  if(confirm('입력한 지출과 설정을 전부 초기화할까요? 이 작업은 되돌릴 수 없어요.')){
-    state=structuredClone(defaultState); await save(); activeTab='all'; render(); toast('초기화했어요');
-  }
-};
-$('#exportBtn').onclick=()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`travel-settlement-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),500);
-};
-$('#importInput').addEventListener('change',async e=>{
-  const f=e.target.files[0]; if(!f)return;
+}
+async function uploadNewPhotos(expenseId){
+  var finalPaths=[];
+  var uploadedNow=[];
   try{
-    const obj=JSON.parse(await f.text());
-    if(!obj?.config||!Array.isArray(obj?.expenses)) throw new Error('bad');
-    state=obj; await save(); activeTab='all'; render(); toast('백업을 불러왔어요');
-  }catch(err){alert('올바른 백업 JSON 파일이 아니에요.')}
-  e.target.value='';
+    for(var i=0;i<editingPhotoItems.length;i++){
+      var item=editingPhotoItems[i];
+      if(item.path){
+        finalPaths.push(item.path);
+        continue;
+      }
+      var path=expenseId+'/'+uuidv4()+'.jpg';
+      var up=await sb.storage.from(BUCKET).upload(path,item.file,{
+        contentType:item.file.type||'image/jpeg',
+        upsert:false
+      });
+      if(up.error)throw up.error;
+      uploadedNow.push(path);
+      finalPaths.push(path);
+    }
+    return {paths:finalPaths,uploadedNow:uploadedNow};
+  }catch(err){
+    if(uploadedNow.length)await sb.storage.from(BUCKET).remove(uploadedNow);
+    throw err;
+  }
+}
+
+qs('#fPhotos').addEventListener('change',async function(e){
+  await addImageFiles(Array.prototype.slice.call(e.target.files||[]));e.target.value='';
+});
+document.addEventListener('paste',async function(e){
+  if(!qs('#expenseModal').classList.contains('open'))return;
+  var items=e.clipboardData&&e.clipboardData.items?Array.prototype.slice.call(e.clipboardData.items):[];
+  var files=items.filter(function(it){return it.kind==='file'&&it.type.indexOf('image/')===0}).map(function(it){return it.getAsFile()}).filter(Boolean);
+  if(files.length){e.preventDefault();await addImageFiles(files);toast('클립보드 사진을 붙여넣었어요')}
+});
+['dragenter','dragover'].forEach(function(evt){
+  qs('#photoZone').addEventListener(evt,function(e){e.preventDefault();qs('#photoZone').style.background='#eef6ff'});
+});
+['dragleave','drop'].forEach(function(evt){
+  qs('#photoZone').addEventListener(evt,function(e){e.preventDefault();qs('#photoZone').style.background=''});
+});
+qs('#photoZone').addEventListener('drop',async function(e){
+  await addImageFiles(Array.prototype.slice.call((e.dataTransfer&&e.dataTransfer.files)||[]));
+});
+qs('#fDate').addEventListener('change',function(){participantsTouched=false;updateParticipantDefaults()});
+qs('#participantChecks').addEventListener('change',function(){participantsTouched=true;refreshChips()});
+
+qs('#expenseForm').addEventListener('submit',async function(ev){
+  ev.preventDefault();
+  var parts=qsa('#participantChecks input').map(function(x){return x.checked});
+  if(!parts.some(Boolean)){alert('정산할 사람을 한 명 이상 선택해 주세요.');return}
+
+  var id=qs('#expenseId').value||uuidv4();
+  var item={
+    id:id,date:qs('#fDate').value,title:qs('#fTitle').value.trim(),payer:qs('#fPayer').value,
+    category:qs('#fCategory').value,jpy:Number(qs('#fJPY').value||0),usd:Number(qs('#fUSD').value||0),
+    krw:Number(qs('#fKRW').value||0),autoBase:qs('#fAutoBase').value,participants:parts,
+    note:qs('#fNote').value.trim(),done:qs('#fDone').checked
+  };
+  if(!item.jpy&&!item.usd&&!item.krw){alert('JPY, USD, KRW 중 하나 이상의 금액을 입력해 주세요.');return}
+  if(item.payer==='COMMON'&&!item.jpy){alert('공금 결제는 공금 잔액 계산을 위해 JPY 금액을 입력해 주세요.');return}
+
+  var submit=qs('#expenseForm button[type="submit"]');
+  submit.disabled=true;submit.textContent='저장 중…';
+  try{
+    var uploaded=await uploadNewPhotos(id);
+    var r=await sb.from('trip_settle_up_expenses').upsert(expenseToRow(item,uploaded.paths),{onConflict:'id'});
+    if(r.error){
+      if(uploaded.uploadedNow.length)await sb.storage.from(BUCKET).remove(uploaded.uploadedNow);
+      throw r.error;
+    }
+    if(removedPhotoPaths.length){
+      var rem=await sb.storage.from(BUCKET).remove(removedPhotoPaths);
+      if(rem.error)console.warn(rem.error);
+    }
+    closeExpense();await loadData(true);toast(qs('#expenseId').value?'수정했어요':'지출을 추가했어요');
+  }catch(err){
+    console.error(err);alert('저장하지 못했어요.\n'+(err.message||err));
+  }finally{
+    submit.disabled=false;submit.textContent='저장';
+  }
 });
 
-(async()=>{
-  const saved=await dbGet();
-  if(saved?.config&&Array.isArray(saved?.expenses)) state=saved;
-  render();
+/* ---------- Settings ---------- */
+
+function renderSettings(){
+  var c=state.config;
+  qs('#settingsFields').innerHTML=
+    '<div class="field"><label>여행 이름</label><input id="sTitle" value="'+esc(c.title)+'"></div>'+
+    '<div class="field"><label>여행 시작일</label><input id="sStart" type="date" value="'+c.startDate+'"></div>'+
+    '<div class="field"><label>총 일수</label><input id="sDays" type="number" min="1" max="14" value="'+c.days+'"></div>'+
+    '<div class="field"><label>1일차 기본 정산 인원</label><input id="sFirstCount" type="number" min="1" max="'+c.people.length+'" value="'+c.firstDayCount+'"></div>'+
+    c.people.map(function(p,i){
+      return '<div class="field"><label>사람 '+(i+1)+' 이름</label><input id="sPerson'+i+'" value="'+esc(p)+'"></div>'+
+      '<div class="field"><label>'+esc(p)+' 공금 납부액 · JPY</label><input id="sContrib'+i+'" type="number" min="0" step="1" value="'+Number(c.commonContribJPY[i]||0)+'"></div>';
+    }).join('')+
+    '<div class="field"><label>환율 · 100 JPY = KRW</label><input id="sJPYRate" type="number" min="0" step="0.01" value="'+c.jpy100ToKrw+'"><div class="help">예: 950 → ¥100 = ₩950</div></div>'+
+    '<div class="field"><label>환율 · 1 USD = KRW</label><input id="sUSDRate" type="number" min="0" step="0.01" value="'+c.usdToKrw+'"><div class="help">예: 1400 → $1 = ₩1,400</div></div>';
+}
+function openSettings(){renderSettings();qs('#settingsModal').classList.add('open')}
+function closeSettings(){qs('#settingsModal').classList.remove('open')}
+
+qs('#saveSettingsBtn').onclick=async function(){
+  var c={
+    title:qs('#sTitle').value.trim()||'여행 가계부 · 정산',
+    startDate:qs('#sStart').value,
+    days:Math.max(1,Number(qs('#sDays').value||4)),
+    firstDayCount:Math.min(state.config.people.length,Math.max(1,Number(qs('#sFirstCount').value||2))),
+    people:state.config.people.map(function(_,i){return qs('#sPerson'+i).value.trim()||('사람'+(i+1))}),
+    commonContribJPY:state.config.people.map(function(_,i){return Number(qs('#sContrib'+i).value||0)}),
+    jpy100ToKrw:Number(qs('#sJPYRate').value||0),
+    usdToKrw:Number(qs('#sUSDRate').value||0)
+  };
+  try{
+    var r=await sb.from('trip_settle_up_config').upsert(configToRow(c),{onConflict:'id'});
+    if(r.error)throw r.error;
+    closeSettings();await loadData(true);toast('설정을 저장했어요');
+  }catch(err){console.error(err);alert('설정을 저장하지 못했어요.\n'+(err.message||err))}
+};
+
+qs('#resetBtn').onclick=async function(){
+  if(!confirm('지출과 설정을 전부 초기화할까요? 이 작업은 되돌릴 수 없어요.'))return;
+  try{
+    var list=await sb.from('trip_settle_up_expenses').select('photos');
+    if(list.error)throw list.error;
+    var paths=[];
+    (list.data||[]).forEach(function(x){if(Array.isArray(x.photos))paths=paths.concat(x.photos)});
+    if(paths.length){
+      var sr=await sb.storage.from(BUCKET).remove(paths);
+      if(sr.error)console.warn(sr.error);
+    }
+    var dr=await sb.from('trip_settle_up_expenses').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    if(dr.error)throw dr.error;
+    var cr=await sb.from('trip_settle_up_config').upsert(configToRow(defaultState.config),{onConflict:'id'});
+    if(cr.error)throw cr.error;
+    activeTab='all';closeSettings();await loadData(true);toast('초기화했어요');
+  }catch(err){console.error(err);alert('초기화하지 못했어요.\n'+(err.message||err))}
+};
+
+/* ---------- UI events ---------- */
+
+qs('#addBtn').onclick=function(){openExpense(null)};
+qs('#closeExpense').onclick=closeExpense;
+qs('#cancelExpense').onclick=closeExpense;
+qs('#expenseModal').addEventListener('click',function(e){if(e.target===qs('#expenseModal'))closeExpense()});
+qs('#settingsBtn').onclick=openSettings;
+qs('#sideLedgerBtn').onclick=function(){activeTab='all';render()};
+qs('#sideSettleBtn').onclick=function(){activeTab='settle';render()};
+qs('#sideSettingsBtn').onclick=openSettings;
+qs('#mobileLedgerBtn').onclick=function(){activeTab='all';render()};
+qs('#mobileSettleBtn').onclick=function(){activeTab='settle';render()};
+qs('#mobileSettingsBtn').onclick=openSettings;
+qs('#closeSettings').onclick=closeSettings;
+qs('#settingsModal').addEventListener('click',function(e){if(e.target===qs('#settingsModal'))closeSettings()});
+qs('#lightbox').onclick=function(){qs('#lightbox').classList.remove('open')};
+document.addEventListener('click',function(){
+  qsa('#expenseList .expense-menu.open').forEach(function(menu){menu.classList.remove('open')});
+});
+qs('#payerFilter').addEventListener('change',renderLedger);
+qs('#statusFilter').addEventListener('change',renderLedger);
+qs('#searchInput').addEventListener('input',renderLedger);
+
+qs('#pinForm').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var pin=qs('#pinInput').value.trim();
+  if(!pin){setPinError('방 코드를 입력해 주세요.');return}
+  var btn=qs('#pinSubmit');btn.disabled=true;btn.textContent='확인 중…';setPinError('');
+  try{
+    var ok=await joinRoom(pin);
+    if(!ok){
+      setPinError('코드가 맞지 않아요. 여러 번 틀리면 잠시 제한돼요.');
+      return;
+    }
+    qs('#pinInput').value='';
+    document.body.classList.add('app-ready');
+    await loadData(true);
+    startRealtime();
+  }catch(err){
+    console.error(err);
+    setPinError('입장 확인에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  }finally{
+    btn.disabled=false;btn.textContent='입장하기';
+  }
+});
+
+/* ---------- boot ---------- */
+
+(async function(){
+  try{
+    setAccessLoading('Supabase 연결 중…');
+    await ensureAnonymousSession();
+    var allowed=await hasRoomAccess();
+    if(allowed){
+      document.body.classList.add('app-ready');
+      setAccessLoading('');
+      await loadData(true);
+      startRealtime();
+    }else{
+      setAccessLoading('');
+      setTimeout(function(){qs('#pinInput').focus()},50);
+    }
+  }catch(err){
+    console.error(err);
+    setAccessLoading('');
+    setPinError(
+      '연결할 수 없어요. Supabase에서 Anonymous Sign-ins를 켰는지 확인해 주세요.'
+    );
+  }
+})();
 })();
 </script>
 </body>
