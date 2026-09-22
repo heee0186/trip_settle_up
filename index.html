@@ -1539,6 +1539,91 @@ body.reorder-mode .expense{
   .reorder-arrow{width:30px;height:30px}
 }
 
+
+/* ===== Direct settlement mode ===== */
+.settlement-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.settlement-toggle{
+  display:inline-flex;
+  gap:4px;
+  padding:3px;
+  background:#f2f4f6;
+  border-radius:10px;
+}
+.settlement-mode-btn{
+  border:0;
+  background:transparent;
+  color:#6b7684;
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:11px;
+  font-weight:800;
+}
+.settlement-mode-btn.active{
+  background:#fff;
+  color:#191f28;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.settlement-mode-btn:disabled{
+  opacity:.35;
+  cursor:default;
+}
+.share-panel{margin-top:8px}
+.direct-share-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.direct-share-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  background:#f5f6f8;
+  border-radius:11px;
+  padding:8px 10px;
+}
+.direct-share-name{
+  font-size:12px;
+  font-weight:800;
+  color:#525d6b;
+  min-width:0;
+}
+.direct-share-input-wrap{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex:0 0 auto;
+}
+.direct-share-input-wrap span{
+  font-size:11px;
+  color:#8b95a1;
+  font-weight:800;
+}
+.direct-share-input{
+  width:90px !important;
+  padding:8px 9px !important;
+  text-align:right;
+  background:#fff !important;
+}
+.direct-share-summary{
+  margin-top:7px;
+  font-size:10px;
+  color:#8b95a1;
+  line-height:1.5;
+}
+@media(max-width:680px){
+  .direct-share-list{grid-template-columns:1fr}
+  .settlement-head{align-items:flex-start}
+  .settlement-toggle{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .settlement-mode-btn{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -1666,9 +1751,25 @@ body.reorder-mode .expense{
           </div>
 
           <div class="field full">
-            <label>비용을 나눌 사람</label>
-            <div class="participants" id="participantChecks"></div>
-            <div class="help">날짜 기준 기본 인원이 자동 선택됩니다. 항목별로 자유롭게 바꿀 수 있어요.</div>
+            <div class="settlement-head">
+              <label>비용 부담 방식</label>
+              <div class="settlement-toggle">
+                <button type="button" class="settlement-mode-btn active" id="equalModeBtn">균등분할</button>
+                <button type="button" class="settlement-mode-btn" id="directModeBtn">직접입력</button>
+              </div>
+            </div>
+
+            <div class="share-panel" id="equalShareBox">
+              <div class="participants" id="participantChecks"></div>
+              <div class="help">비용을 부담할 사람을 선택하면 자동으로 1/N 계산해요.</div>
+            </div>
+
+            <div class="share-panel" id="directShareBox" style="display:none">
+              <div class="direct-share-list" id="directShareInputs"></div>
+              <div class="direct-share-summary" id="directShareSummary">
+                다른 사람이 돌려줄 품목 금액만 엔화로 입력하세요. 남은 금액은 결제자 본인 부담으로 처리돼요.
+              </div>
+            </div>
           </div>
 
           <div class="field">
@@ -1786,6 +1887,8 @@ var activeTab='all';
 var editingPhotoItems=[];
 var removedPhotoPaths=[];
 var participantsTouched=false;
+var editingSettlementMode='equal';
+var editingDirectAmounts=[];
 var realtimeChannel=null;
 var refreshTimer=null;
 var reorderMode=false;
@@ -1843,6 +1946,38 @@ function getUSD(e){
   return state.config.usdToKrw?krw/state.config.usdToKrw:0;
 }
 function isCommon(e){return e.payer==='COMMON'}
+function isDirect(e){return !isCommon(e) && e.settlementMode==='direct'}
+function directShareKRW(e,index){
+  var jpy=Number((e.directAmounts||[])[index]||0);
+  if(jpy<=0)return 0;
+  var totalJPY=Number(e.jpy||0);
+  if(totalJPY<=0)return 0;
+  return getKRW(e)*(jpy/totalJPY);
+}
+function directOthersTotalJPY(e){
+  var payer=Number(e.payer);
+  return (e.directAmounts||[]).reduce(function(sum,v,i){
+    return sum+(i===payer?0:Number(v||0));
+  },0);
+}
+function personExpenseShareKRW(e,index){
+  if(isCommon(e))return 0;
+
+  if(isDirect(e)){
+    var payer=Number(e.payer);
+    if(index===payer){
+      var otherKRW=state.config.people.reduce(function(sum,_,i){
+        return sum+(i===payer?0:directShareKRW(e,i));
+      },0);
+      return Math.max(0,getKRW(e)-otherKRW);
+    }
+    return directShareKRW(e,index);
+  }
+
+  if(!e.participants[index])return 0;
+  var n=e.participants.filter(Boolean).length;
+  return n?getKRW(e)/n:0;
+}
 function defaultParticipantsForDate(date){
   var idx=dayIndex(date);
   return state.config.people.map(function(_,i){return idx===0?i<state.config.firstDayCount:true});
@@ -1913,6 +2048,8 @@ function expenseFromRow(r){
     krw:Number(r.krw||0),
     autoBase:r.auto_base||'JPY',
     participants:Array.isArray(r.participants)?r.participants:[],
+    settlementMode:r.settlement_mode||'equal',
+    directAmounts:Array.isArray(r.direct_amounts_jpy)?r.direct_amounts_jpy:[],
     photoPaths:Array.isArray(r.photos)?r.photos:[],
     photos:[],
     note:r.note||'',
@@ -1933,6 +2070,8 @@ function expenseToRow(e,photoPaths){
     krw:Number(e.krw||0),
     auto_base:e.autoBase||'JPY',
     participants:e.participants,
+    settlement_mode:e.settlementMode||'equal',
+    direct_amounts_jpy:e.directAmounts||[],
     photos:photoPaths||[],
     note:e.note||'',
     done:!!e.done,
@@ -2058,7 +2197,16 @@ function expenseHTML(e){
   var each=people.length?krwAmt/people.length:0;
   var debts='';
 
-  if(!isCommon(e)&&people.length){
+  if(isDirect(e)){
+    var payerIdx=Number(e.payer);
+    state.config.people.forEach(function(name,idx){
+      if(idx===payerIdx)return;
+      var directKrw=directShareKRW(e,idx);
+      if(directKrw>0){
+        debts+='<span class="debt">'+esc(name)+' → '+esc(payer)+' '+won(directKrw)+'</span>';
+      }
+    });
+  }else if(!isCommon(e)&&people.length){
     people.forEach(function(name){
       var idx=state.config.people.indexOf(name);
       if(String(idx)!==String(e.payer)){
@@ -2147,13 +2295,35 @@ function renderLedger(){
 }
 function personalBalances(){
   var bal=state.config.people.map(function(){return 0});
-  state.expenses.filter(function(e){return !isCommon(e)&&!e.done}).forEach(function(e){
-    var amt=getKRW(e);
-    var ids=e.participants.map(function(v,i){return v?i:null}).filter(function(v){return v!==null});
-    if(!ids.length)return;
-    var share=amt/ids.length,payer=Number(e.payer);
-    bal[payer]+=amt;ids.forEach(function(i){bal[i]-=share});
-  });
+
+  state.expenses
+    .filter(function(e){return !isCommon(e)&&!e.done})
+    .forEach(function(e){
+      var payer=Number(e.payer);
+
+      if(isDirect(e)){
+        state.config.people.forEach(function(_,i){
+          if(i===payer)return;
+          var amount=directShareKRW(e,i);
+          if(amount<=0)return;
+          bal[payer]+=amount;
+          bal[i]-=amount;
+        });
+        return;
+      }
+
+      var amt=getKRW(e);
+      var ids=e.participants
+        .map(function(v,i){return v?i:null})
+        .filter(function(v){return v!==null});
+
+      if(!ids.length)return;
+
+      var share=amt/ids.length;
+      bal[payer]+=amt;
+      ids.forEach(function(i){bal[i]-=share});
+    });
+
   return bal;
 }
 function commonUsage(){
@@ -2181,9 +2351,11 @@ function renderSettlement(){
   var bal=personalBalances(),usage=commonUsage();
   qs('#personCards').innerHTML=state.config.people.map(function(p,i){
     var paid=state.expenses.filter(function(e){return String(e.payer)===String(i)}).reduce(function(a,e){return a+getKRW(e)},0);
-    var own=state.expenses.filter(function(e){return !isCommon(e)&&e.participants[i]}).reduce(function(a,e){
-      var n=e.participants.filter(Boolean).length;return a+(n?getKRW(e)/n:0);
-    },0);
+    var own=state.expenses
+      .filter(function(e){return !isCommon(e)})
+      .reduce(function(a,e){
+        return a+personExpenseShareKRW(e,i);
+      },0);
     var remain=Number(state.config.commonContribJPY[i]||0)-usage[i];
     return '<div class="person-card"><div class="name">'+esc(p)+'</div>'+
       '<div class="line"><span>개인결제 총액</span><strong>'+won(paid)+'</strong></div>'+
@@ -2356,6 +2528,66 @@ function attachExpenseEvents(){
   });
 }
 
+
+function setSettlementMode(mode){
+  if(qs('#fPayer').value==='COMMON')mode='equal';
+
+  editingSettlementMode=mode;
+
+  qs('#equalModeBtn').classList.toggle('active',mode==='equal');
+  qs('#directModeBtn').classList.toggle('active',mode==='direct');
+  qs('#equalShareBox').style.display=mode==='equal'?'':'none';
+  qs('#directShareBox').style.display=mode==='direct'?'':'none';
+
+  var isCommonPayer=qs('#fPayer').value==='COMMON';
+  qs('#directModeBtn').disabled=isCommonPayer;
+
+  if(mode==='direct')renderDirectShareInputs();
+}
+
+function renderDirectShareInputs(){
+  var payer=Number(qs('#fPayer').value);
+
+  qs('#directShareInputs').innerHTML=state.config.people.map(function(name,i){
+    if(i===payer)return '';
+
+    var value=Number(editingDirectAmounts[i]||0);
+
+    return '<div class="direct-share-row">'+
+      '<div class="direct-share-name">'+esc(name)+'</div>'+
+      '<div class="direct-share-input-wrap">'+
+        '<span>¥</span>'+
+        '<input class="direct-share-input" type="number" min="0" step="1" inputmode="decimal" data-direct-index="'+i+'" value="'+(value||'')+'" placeholder="0">'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  qsa('#directShareInputs [data-direct-index]').forEach(function(input){
+    input.addEventListener('input',function(){
+      var i=Number(input.getAttribute('data-direct-index'));
+      editingDirectAmounts[i]=Number(input.value||0);
+      updateDirectShareSummary();
+    });
+  });
+
+  updateDirectShareSummary();
+}
+
+function updateDirectShareSummary(){
+  var total=editingDirectAmounts.reduce(function(sum,v,i){
+    var payer=Number(qs('#fPayer').value);
+    return sum+(i===payer?0:Number(v||0));
+  },0);
+
+  var bill=Number(qs('#fJPY').value||0);
+  var remaining=Math.max(0,bill-total);
+
+  qs('#directShareSummary').textContent=
+    '다른 사람이 돌려줄 금액 '+yen(total)+
+    (bill>0?' · 결제자 부담 '+yen(remaining):'')+
+    ' · 입력하지 않은 금액은 결제자 본인 부담';
+}
+
 function fillFormPeople(){
   qs('#fPayer').innerHTML=state.config.people.map(function(p,i){return '<option value="'+i+'">'+esc(p)+'</option>'}).join('')+'<option value="COMMON">공금</option>';
   qs('#participantChecks').innerHTML=state.config.people.map(function(p,i){
@@ -2376,6 +2608,10 @@ function updateParticipantDefaults(){
 }
 function openExpense(e){
   fillFormPeople();participantsTouched=!!e;
+  editingSettlementMode=e?(e.settlementMode||'equal'):'equal';
+  editingDirectAmounts=state.config.people.map(function(_,i){
+    return e&&e.directAmounts?Number(e.directAmounts[i]||0):0;
+  });
   qs('#modalTitle').textContent=e?'지출 수정':'지출 추가';
   qs('#expenseId').value=e?e.id:'';
   qs('#fDate').value=e?e.date:(activeTab.indexOf('day')===0?dates()[Number(activeTab.slice(3))]:dates()[0]);
@@ -2399,6 +2635,8 @@ function openExpense(e){
   }else{
     updateParticipantDefaults();
   }
+
+  setSettlementMode(editingSettlementMode);
   renderPhotoPreview();
   qs('#fPhotos').value='';
   qs('#deleteExpenseBtn').style.display=e?'':'none';
@@ -2496,11 +2734,47 @@ qs('#photoZone').addEventListener('drop',async function(e){
 });
 qs('#fDate').addEventListener('change',function(){participantsTouched=false;updateParticipantDefaults()});
 qs('#participantChecks').addEventListener('change',function(){participantsTouched=true;refreshChips()});
+qs('#equalModeBtn').addEventListener('click',function(){setSettlementMode('equal')});
+qs('#directModeBtn').addEventListener('click',function(){setSettlementMode('direct')});
+qs('#fPayer').addEventListener('change',function(){
+  editingDirectAmounts=state.config.people.map(function(_,i){
+    return Number(editingDirectAmounts[i]||0);
+  });
+  setSettlementMode(editingSettlementMode);
+});
+qs('#fJPY').addEventListener('input',function(){
+  if(editingSettlementMode==='direct')updateDirectShareSummary();
+});
 
 qs('#expenseForm').addEventListener('submit',async function(ev){
   ev.preventDefault();
   var parts=qsa('#participantChecks input').map(function(x){return x.checked});
-  if(!parts.some(Boolean)){alert('정산할 사람을 한 명 이상 선택해 주세요.');return}
+
+  if(editingSettlementMode==='equal' && !parts.some(Boolean)){
+    alert('비용을 부담할 사람을 한 명 이상 선택해 주세요.');
+    return;
+  }
+
+  if(editingSettlementMode==='direct' && qs('#fPayer').value==='COMMON'){
+    alert('공금 결제는 균등분할 방식으로 입력해 주세요.');
+    return;
+  }
+
+  if(editingSettlementMode==='direct' && !Number(qs('#fJPY').value||0)){
+    alert('직접입력 정산은 품목 금액 계산을 위해 JPY 결제액이 필요해요.');
+    return;
+  }
+
+  if(editingSettlementMode==='direct'){
+    var directTotal=editingDirectAmounts.reduce(function(sum,v,i){
+      return sum+(i===Number(qs('#fPayer').value)?0:Number(v||0));
+    },0);
+
+    if(directTotal>Number(qs('#fJPY').value||0)){
+      alert('직접입력 금액의 합이 전체 결제액보다 클 수 없어요.');
+      return;
+    }
+  }
 
   var id=qs('#expenseId').value||uuidv4();
   var existingExpense=state.expenses.find(function(x){return x.id===id});
@@ -2513,6 +2787,8 @@ qs('#expenseForm').addEventListener('submit',async function(ev){
     id:id,date:qs('#fDate').value,title:qs('#fTitle').value.trim(),payer:qs('#fPayer').value,
     category:qs('#fCategory').value,jpy:Number(qs('#fJPY').value||0),usd:Number(qs('#fUSD').value||0),
     krw:Number(qs('#fKRW').value||0),autoBase:qs('#fAutoBase').value,participants:parts,
+    settlementMode:editingSettlementMode,
+    directAmounts:editingSettlementMode==='direct'?editingDirectAmounts.slice():[],
     note:qs('#fNote').value.trim(),done:qs('#fDone').checked,
     sortOrder:existingExpense&&existingExpense.date===qs('#fDate').value
       ? Number(existingExpense.sortOrder||nextOrder)
