@@ -1624,6 +1624,122 @@ body.reorder-mode .expense{
   .settlement-mode-btn{width:100%}
 }
 
+
+/* ===== External-person direct settlement ===== */
+.external-share-block{
+  margin-top:12px;
+  padding-top:11px;
+  border-top:1px solid #edf0f3;
+}
+.external-share-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.external-share-title{
+  font-size:11px;
+  font-weight:900;
+  color:#6b7684;
+}
+.external-add-btn{
+  border:0;
+  background:#f2f4f6;
+  color:#4e5968;
+  border-radius:9px;
+  padding:7px 9px;
+  font-size:10.5px;
+  font-weight:900;
+}
+.external-share-list{
+  display:grid;
+  gap:7px;
+}
+.external-share-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 108px 32px;
+  gap:6px;
+  align-items:center;
+}
+.external-share-row input{
+  min-width:0;
+  background:#fff;
+}
+.external-amount-wrap{
+  position:relative;
+}
+.external-amount-wrap::before{
+  content:'¥';
+  position:absolute;
+  left:9px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:11px;
+  font-weight:800;
+  color:#8b95a1;
+  pointer-events:none;
+}
+.external-amount-input{
+  width:100% !important;
+  padding-left:22px !important;
+  text-align:right;
+}
+.external-remove-btn{
+  width:32px;
+  height:32px;
+  border:0;
+  border-radius:8px;
+  background:#f5f6f8;
+  color:#8b95a1;
+  font-size:15px;
+  line-height:1;
+  padding:0;
+}
+.external-empty{
+  padding:3px 0 1px;
+  font-size:10.5px;
+  color:#a1a9b3;
+}
+.external-settle-list{
+  display:grid;
+  gap:8px;
+}
+.external-transfer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#f7f8fa;
+}
+.external-transfer-main{
+  min-width:0;
+  font-size:13px;
+  color:#333d4b;
+}
+.external-transfer-main b{
+  font-weight:900;
+}
+.external-transfer-sub{
+  margin-top:3px;
+  font-size:10.5px;
+  color:#8b95a1;
+}
+.external-transfer strong{
+  flex:0 0 auto;
+  font-size:14px;
+}
+@media(max-width:680px){
+  .external-share-row{
+    grid-template-columns:minmax(0,1fr) 100px 32px;
+  }
+  .external-transfer{
+    align-items:flex-start;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1695,6 +1811,7 @@ body.reorder-mode .expense{
       <div class="cardbody">
         <div class="notice">
           개인 결제는 <b>미정산 항목의 원화 정산액</b>을 기준으로 계산하고,
+          직접입력한 여행 외 사람의 금액은 <b>여행 외 정산</b>에 별도로 표시합니다.
           공금 결제는 실제 사용한 <b>엔화</b>를 참여자 수대로 나눠 각자 공금 잔액에서 차감합니다.
         </div>
         <div class="hr"></div>
@@ -1702,6 +1819,9 @@ body.reorder-mode .expense{
         <div class="hr"></div>
         <h3 style="margin:0 0 10px;font-size:14px">미정산 개인결제 · 송금 최소화</h3>
         <div class="transfer-list" id="transferList"></div>
+        <div class="hr"></div>
+        <h3 style="margin:0 0 10px;font-size:14px">여행 외 정산</h3>
+        <div class="external-settle-list" id="externalSettlementList"></div>
         <div class="hr"></div>
         <h3 style="margin:0 0 10px;font-size:14px">공금 개인별 잔액</h3>
         <div id="commonTable" style="overflow:auto"></div>
@@ -1766,6 +1886,15 @@ body.reorder-mode .expense{
 
             <div class="share-panel" id="directShareBox" style="display:none">
               <div class="direct-share-list" id="directShareInputs"></div>
+
+              <div class="external-share-block">
+                <div class="external-share-head">
+                  <div class="external-share-title">여행 외 사람</div>
+                  <button type="button" class="external-add-btn" id="addExternalPerson">＋ 여행 외 사람</button>
+                </div>
+                <div class="external-share-list" id="externalShareInputs"></div>
+              </div>
+
               <div class="direct-share-summary" id="directShareSummary">
                 다른 사람이 돌려줄 품목 금액만 엔화로 입력하세요. 남은 금액은 결제자 본인 부담으로 처리돼요.
               </div>
@@ -1889,6 +2018,7 @@ var removedPhotoPaths=[];
 var participantsTouched=false;
 var editingSettlementMode='equal';
 var editingDirectAmounts=[];
+var editingExternalSettlements=[];
 var realtimeChannel=null;
 var refreshTimer=null;
 var reorderMode=false;
@@ -1960,6 +2090,17 @@ function directOthersTotalJPY(e){
     return sum+(i===payer?0:Number(v||0));
   },0);
 }
+function externalTotalJPY(e){
+  return (e.externalSettlements||[]).reduce(function(sum,row){
+    return sum+Number((row&&row.jpy)||0);
+  },0);
+}
+function externalShareKRW(e,row){
+  var jpy=Number((row&&row.jpy)||0);
+  var totalJPY=Number(e.jpy||0);
+  if(jpy<=0||totalJPY<=0)return 0;
+  return getKRW(e)*(jpy/totalJPY);
+}
 function personExpenseShareKRW(e,index){
   if(isCommon(e))return 0;
 
@@ -1969,7 +2110,10 @@ function personExpenseShareKRW(e,index){
       var otherKRW=state.config.people.reduce(function(sum,_,i){
         return sum+(i===payer?0:directShareKRW(e,i));
       },0);
-      return Math.max(0,getKRW(e)-otherKRW);
+      var externalKRW=(e.externalSettlements||[]).reduce(function(sum,row){
+        return sum+externalShareKRW(e,row);
+      },0);
+      return Math.max(0,getKRW(e)-otherKRW-externalKRW);
     }
     return directShareKRW(e,index);
   }
@@ -2050,6 +2194,7 @@ function expenseFromRow(r){
     participants:Array.isArray(r.participants)?r.participants:[],
     settlementMode:r.settlement_mode||'equal',
     directAmounts:Array.isArray(r.direct_amounts_jpy)?r.direct_amounts_jpy:[],
+    externalSettlements:Array.isArray(r.external_settlements)?r.external_settlements:[],
     photoPaths:Array.isArray(r.photos)?r.photos:[],
     photos:[],
     note:r.note||'',
@@ -2072,6 +2217,7 @@ function expenseToRow(e,photoPaths){
     participants:e.participants,
     settlement_mode:e.settlementMode||'equal',
     direct_amounts_jpy:e.directAmounts||[],
+    external_settlements:e.externalSettlements||[],
     photos:photoPaths||[],
     note:e.note||'',
     done:!!e.done,
@@ -2204,6 +2350,13 @@ function expenseHTML(e){
       var directKrw=directShareKRW(e,idx);
       if(directKrw>0){
         debts+='<span class="debt">'+esc(name)+' → '+esc(payer)+' '+won(directKrw)+'</span>';
+      }
+    });
+    (e.externalSettlements||[]).forEach(function(row){
+      var amount=externalShareKRW(e,row);
+      var name=((row&&row.name)||'').trim();
+      if(name&&amount>0){
+        debts+='<span class="debt">'+esc(name)+' → '+esc(payer)+' '+won(amount)+'</span>';
       }
     });
   }else if(!isCommon(e)&&people.length){
@@ -2346,6 +2499,61 @@ function minimizeTransfers(bal){
   }
   return out;
 }
+
+function externalPendingSettlements(){
+  var grouped={};
+
+  state.expenses
+    .filter(function(e){return isDirect(e)&&!e.done})
+    .forEach(function(e){
+      var payerIdx=Number(e.payer);
+      var payer=state.config.people[payerIdx]||'미지정';
+
+      (e.externalSettlements||[]).forEach(function(row){
+        var name=((row&&row.name)||'').trim();
+        var amount=externalShareKRW(e,row);
+        if(!name||amount<=0)return;
+
+        var key=payerIdx+'|'+name;
+        if(!grouped[key]){
+          grouped[key]={
+            name:name,
+            payer:payer,
+            payerIdx:payerIdx,
+            amount:0,
+            items:0
+          };
+        }
+
+        grouped[key].amount+=amount;
+        grouped[key].items+=1;
+      });
+    });
+
+  return Object.keys(grouped)
+    .map(function(key){return grouped[key]})
+    .sort(function(a,b){
+      if(a.payerIdx!==b.payerIdx)return a.payerIdx-b.payerIdx;
+      return a.name.localeCompare(b.name,'ko');
+    });
+}
+
+function renderExternalSettlement(){
+  var rows=externalPendingSettlements();
+
+  qs('#externalSettlementList').innerHTML=rows.length
+    ? rows.map(function(row){
+        return '<div class="external-transfer">'+
+          '<div class="external-transfer-main">'+
+            '<b>'+esc(row.name)+'</b> → <b>'+esc(row.payer)+'</b>'+
+            '<div class="external-transfer-sub">미정산 '+row.items+'건</div>'+
+          '</div>'+
+          '<strong>'+won(row.amount)+'</strong>'+
+        '</div>';
+      }).join('')
+    : '<div class="empty" style="padding:20px">여행 외 사람에게 받을 미정산 금액이 없어요.</div>';
+}
+
 function renderSettlement(){
   if(activeTab!=='settle')return;
   var bal=personalBalances(),usage=commonUsage();
@@ -2368,6 +2576,8 @@ function renderSettlement(){
   qs('#transferList').innerHTML=transfers.length?transfers.map(function(t){
     return '<div class="transfer"><div><b>'+esc(state.config.people[t.from])+'</b> → <b>'+esc(state.config.people[t.to])+'</b></div><strong>'+won(t.amt)+'</strong></div>';
   }).join(''):'<div class="empty" style="padding:20px">개인결제 기준 서로 보낼 돈이 없어요.</div>';
+
+  renderExternalSettlement();
 
   var rows=state.config.people.map(function(p,i){
     var contrib=Number(state.config.commonContribJPY[i]||0),remain=contrib-usage[i],krwEq=remain*(state.config.jpy100ToKrw/100);
@@ -2542,7 +2752,10 @@ function setSettlementMode(mode){
   var isCommonPayer=qs('#fPayer').value==='COMMON';
   qs('#directModeBtn').disabled=isCommonPayer;
 
-  if(mode==='direct')renderDirectShareInputs();
+  if(mode==='direct'){
+    renderDirectShareInputs();
+    renderExternalShareInputs();
+  }
 }
 
 function renderDirectShareInputs(){
@@ -2573,17 +2786,72 @@ function renderDirectShareInputs(){
   updateDirectShareSummary();
 }
 
+
+function addExternalSettlementRow(){
+  editingExternalSettlements.push({name:'',jpy:0});
+  renderExternalShareInputs();
+}
+
+function renderExternalShareInputs(){
+  var box=qs('#externalShareInputs');
+
+  if(!editingExternalSettlements.length){
+    box.innerHTML='<div class="external-empty">필요할 때만 추가하면 돼요.</div>';
+    return;
+  }
+
+  box.innerHTML=editingExternalSettlements.map(function(row,i){
+    return '<div class="external-share-row">'+
+      '<input type="text" maxlength="30" data-external-name="'+i+'" value="'+esc((row&&row.name)||'')+'" placeholder="이름">'+
+      '<div class="external-amount-wrap">'+
+        '<input class="external-amount-input" type="number" min="0" step="1" inputmode="decimal" data-external-jpy="'+i+'" value="'+(Number((row&&row.jpy)||0)||'')+'" placeholder="0">'+
+      '</div>'+
+      '<button type="button" class="external-remove-btn" data-external-remove="'+i+'" title="삭제">×</button>'+
+    '</div>';
+  }).join('');
+
+  qsa('#externalShareInputs [data-external-name]').forEach(function(input){
+    input.addEventListener('input',function(){
+      var i=Number(input.getAttribute('data-external-name'));
+      editingExternalSettlements[i].name=input.value;
+    });
+  });
+
+  qsa('#externalShareInputs [data-external-jpy]').forEach(function(input){
+    input.addEventListener('input',function(){
+      var i=Number(input.getAttribute('data-external-jpy'));
+      editingExternalSettlements[i].jpy=Number(input.value||0);
+      updateDirectShareSummary();
+    });
+  });
+
+  qsa('#externalShareInputs [data-external-remove]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=Number(btn.getAttribute('data-external-remove'));
+      editingExternalSettlements.splice(i,1);
+      renderExternalShareInputs();
+      updateDirectShareSummary();
+    });
+  });
+}
+
 function updateDirectShareSummary(){
-  var total=editingDirectAmounts.reduce(function(sum,v,i){
+  var memberTotal=editingDirectAmounts.reduce(function(sum,v,i){
     var payer=Number(qs('#fPayer').value);
     return sum+(i===payer?0:Number(v||0));
   },0);
 
+  var externalTotal=editingExternalSettlements.reduce(function(sum,row){
+    return sum+Number((row&&row.jpy)||0);
+  },0);
+
+  var total=memberTotal+externalTotal;
   var bill=Number(qs('#fJPY').value||0);
   var remaining=Math.max(0,bill-total);
 
   qs('#directShareSummary').textContent=
-    '다른 사람이 돌려줄 금액 '+yen(total)+
+    '돌려받을 금액 '+yen(total)+
+    (externalTotal>0?' · 여행 외 '+yen(externalTotal):'')+
     (bill>0?' · 결제자 부담 '+yen(remaining):'')+
     ' · 입력하지 않은 금액은 결제자 본인 부담';
 }
@@ -2612,6 +2880,14 @@ function openExpense(e){
   editingDirectAmounts=state.config.people.map(function(_,i){
     return e&&e.directAmounts?Number(e.directAmounts[i]||0):0;
   });
+  editingExternalSettlements=e&&Array.isArray(e.externalSettlements)
+    ? e.externalSettlements.map(function(row){
+        return {
+          name:String((row&&row.name)||''),
+          jpy:Number((row&&row.jpy)||0)
+        };
+      })
+    : [];
   qs('#modalTitle').textContent=e?'지출 수정':'지출 추가';
   qs('#expenseId').value=e?e.id:'';
   qs('#fDate').value=e?e.date:(activeTab.indexOf('day')===0?dates()[Number(activeTab.slice(3))]:dates()[0]);
@@ -2736,6 +3012,7 @@ qs('#fDate').addEventListener('change',function(){participantsTouched=false;upda
 qs('#participantChecks').addEventListener('change',function(){participantsTouched=true;refreshChips()});
 qs('#equalModeBtn').addEventListener('click',function(){setSettlementMode('equal')});
 qs('#directModeBtn').addEventListener('click',function(){setSettlementMode('direct')});
+qs('#addExternalPerson').addEventListener('click',function(){addExternalSettlementRow()});
 qs('#fPayer').addEventListener('change',function(){
   editingDirectAmounts=state.config.people.map(function(_,i){
     return Number(editingDirectAmounts[i]||0);
@@ -2766,14 +3043,38 @@ qs('#expenseForm').addEventListener('submit',async function(ev){
   }
 
   if(editingSettlementMode==='direct'){
-    var directTotal=editingDirectAmounts.reduce(function(sum,v,i){
+    var memberDirectTotal=editingDirectAmounts.reduce(function(sum,v,i){
       return sum+(i===Number(qs('#fPayer').value)?0:Number(v||0));
     },0);
 
-    if(directTotal>Number(qs('#fJPY').value||0)){
+    var cleanExternal=editingExternalSettlements
+      .map(function(row){
+        return {
+          name:String((row&&row.name)||'').trim(),
+          jpy:Number((row&&row.jpy)||0)
+        };
+      })
+      .filter(function(row){return row.name||row.jpy>0});
+
+    var invalidExternal=cleanExternal.some(function(row){
+      return !row.name || row.jpy<=0;
+    });
+
+    if(invalidExternal){
+      alert('여행 외 사람은 이름과 금액을 모두 입력해 주세요.');
+      return;
+    }
+
+    var externalTotal=cleanExternal.reduce(function(sum,row){
+      return sum+row.jpy;
+    },0);
+
+    if(memberDirectTotal+externalTotal>Number(qs('#fJPY').value||0)){
       alert('직접입력 금액의 합이 전체 결제액보다 클 수 없어요.');
       return;
     }
+
+    editingExternalSettlements=cleanExternal;
   }
 
   var id=qs('#expenseId').value||uuidv4();
@@ -2789,6 +3090,11 @@ qs('#expenseForm').addEventListener('submit',async function(ev){
     krw:Number(qs('#fKRW').value||0),autoBase:qs('#fAutoBase').value,participants:parts,
     settlementMode:editingSettlementMode,
     directAmounts:editingSettlementMode==='direct'?editingDirectAmounts.slice():[],
+    externalSettlements:editingSettlementMode==='direct'
+      ? editingExternalSettlements.map(function(row){
+          return {name:String(row.name||'').trim(),jpy:Number(row.jpy||0)};
+        })
+      : [],
     note:qs('#fNote').value.trim(),done:qs('#fDone').checked,
     sortOrder:existingExpense&&existingExpense.date===qs('#fDate').value
       ? Number(existingExpense.sortOrder||nextOrder)
