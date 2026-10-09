@@ -1740,6 +1740,305 @@ body.reorder-mode .expense{
   }
 }
 
+
+/* ===== Settlement detail view ===== */
+.settle-section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 10px;
+}
+.settle-section-head h3{
+  margin:0;
+  font-size:14px;
+}
+.settle-section-head .sub{
+  font-size:10.5px;
+  color:var(--sub);
+  white-space:nowrap;
+}
+
+.settle-detail-list{
+  display:flex;
+  flex-direction:column;
+  gap:13px;
+}
+
+.settle-day-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.settle-day-label{
+  font-size:10.5px;
+  font-weight:900;
+  color:#8b95a1;
+  padding:0 2px 2px;
+}
+
+.settle-detail-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px 14px;
+  padding:12px 13px;
+  border-radius:13px;
+  background:#f8f9fa;
+  min-width:0;
+}
+
+.settle-detail-row.is-done{
+  opacity:.58;
+}
+
+.settle-detail-main{
+  min-width:0;
+}
+
+.settle-detail-titleline{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  flex-wrap:wrap;
+}
+
+.settle-detail-title{
+  font-size:12.5px;
+  font-weight:900;
+  color:var(--text);
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
+}
+
+.settle-detail-payer{
+  font-size:9.5px;
+  font-weight:800;
+  color:#6b7684;
+  background:#eef0f3;
+  border-radius:7px;
+  padding:4px 6px;
+  white-space:nowrap;
+}
+
+.settle-detail-status{
+  font-size:9.5px;
+  font-weight:800;
+  border-radius:7px;
+  padding:4px 6px;
+  color:#d97706;
+  background:#fff4e5;
+  white-space:nowrap;
+}
+
+.settle-detail-status.done{
+  color:var(--good);
+  background:var(--good-soft);
+}
+
+.settle-detail-note{
+  margin-top:5px;
+  font-size:10.5px;
+  color:#8b95a1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.settle-detail-debts{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:7px;
+}
+
+.settle-detail-chip{
+  font-size:10px;
+  color:#4e5968;
+  background:#eef1f4;
+  border-radius:8px;
+  padding:5px 7px;
+  line-height:1.25;
+}
+
+.settle-detail-chip.external{
+  background:#f3f0ff;
+  color:#6656a8;
+}
+
+.settle-detail-chip.self{
+  color:#8b95a1;
+  background:#f1f3f5;
+}
+
+.settle-detail-amount{
+  text-align:right;
+  white-space:nowrap;
+  align-self:start;
+}
+
+.settle-detail-amount strong{
+  display:block;
+  font-size:13px;
+  color:var(--text);
+}
+
+.settle-detail-amount span{
+  display:block;
+  margin-top:3px;
+  font-size:10px;
+  color:#8b95a1;
+}
+
+.common-detail-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.common-detail-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px 14px;
+  padding:11px 13px;
+  border-radius:12px;
+  background:#f8f9fa;
+}
+
+.common-detail-title{
+  font-size:12px;
+  font-weight:900;
+  color:var(--text);
+}
+
+.common-detail-meta{
+  margin-top:4px;
+  font-size:10px;
+  color:#8b95a1;
+}
+
+.common-detail-shares{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+.common-detail-share{
+  font-size:9.5px;
+  color:#59636f;
+  background:#eef1f4;
+  border-radius:7px;
+  padding:4px 6px;
+}
+
+.common-detail-amount{
+  font-size:13px;
+  font-weight:900;
+  white-space:nowrap;
+  text-align:right;
+}
+
+.settle-quick-stats{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+
+.settle-quick-stat{
+  padding:10px 11px;
+  background:#f8f9fa;
+  border-radius:12px;
+}
+
+.settle-quick-stat .k{
+  font-size:9.5px;
+  color:#8b95a1;
+}
+
+.settle-quick-stat .v{
+  margin-top:3px;
+  font-size:13px;
+  font-weight:900;
+  color:var(--text);
+}
+
+@media(max-width:680px){
+  .settle-section-head{
+    align-items:flex-start;
+  }
+
+  .settle-section-head .sub{
+    white-space:normal;
+    text-align:right;
+  }
+
+  .settle-detail-row,
+  .common-detail-row{
+    grid-template-columns:minmax(0,1fr) auto;
+    padding:11px;
+    gap:7px 10px;
+  }
+
+  .settle-detail-title{
+    font-size:12px;
+  }
+
+  .settle-detail-amount strong,
+  .common-detail-amount{
+    font-size:12px;
+  }
+
+  .settle-quick-stats{
+    grid-template-columns:1fr 1fr 1fr;
+    gap:6px;
+  }
+
+  .settle-quick-stat{
+    padding:9px 8px;
+  }
+
+  .settle-quick-stat .v{
+    font-size:11.5px;
+  }
+}
+
+@media(max-width:420px){
+  .settle-detail-row{
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  .settle-detail-amount{
+    text-align:left;
+    display:flex;
+    align-items:baseline;
+    gap:7px;
+  }
+
+  .settle-detail-amount strong,
+  .settle-detail-amount span{
+    display:inline;
+    margin:0;
+  }
+
+  .common-detail-row{
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+
+  .settle-quick-stat .k{
+    font-size:9px;
+  }
+
+  .settle-quick-stat .v{
+    font-size:10.5px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1814,16 +2113,45 @@ body.reorder-mode .expense{
           직접입력한 여행 외 사람의 금액은 <b>여행 외 정산</b>에 별도로 표시합니다.
           공금 결제는 실제 사용한 <b>엔화</b>를 참여자 수대로 나눠 각자 공금 잔액에서 차감합니다.
         </div>
+
+        <div class="settle-quick-stats" id="settleQuickStats"></div>
+
         <div class="hr"></div>
         <div class="settle-box" id="personCards"></div>
+
         <div class="hr"></div>
-        <h3 style="margin:0 0 10px;font-size:14px">미정산 개인결제 · 송금 최소화</h3>
+        <div class="settle-section-head">
+          <h3>최종 송금</h3>
+          <div class="sub">미정산 개인결제를 합쳐 송금 횟수를 최소화한 결과</div>
+        </div>
         <div class="transfer-list" id="transferList"></div>
+
         <div class="hr"></div>
-        <h3 style="margin:0 0 10px;font-size:14px">여행 외 정산</h3>
+        <div class="settle-section-head">
+          <h3>개인결제 정산 상세</h3>
+          <div class="sub">항목별로 왜 이 금액이 나왔는지 확인</div>
+        </div>
+        <div class="settle-detail-list" id="settlementDetailList"></div>
+
+        <div class="hr"></div>
+        <div class="settle-section-head">
+          <h3>여행 외 정산</h3>
+          <div class="sub">같이 여행하지 않은 사람에게 받을 금액</div>
+        </div>
         <div class="external-settle-list" id="externalSettlementList"></div>
+
         <div class="hr"></div>
-        <h3 style="margin:0 0 10px;font-size:14px">공금 개인별 잔액</h3>
+        <div class="settle-section-head">
+          <h3>공금 사용 상세</h3>
+          <div class="sub">항목별 사용액과 각자 부담 몫</div>
+        </div>
+        <div class="common-detail-list" id="commonDetailList"></div>
+
+        <div class="hr"></div>
+        <div class="settle-section-head">
+          <h3>공금 개인별 잔액</h3>
+          <div class="sub">낸 공금 − 실제 사용 몫</div>
+        </div>
         <div id="commonTable" style="overflow:auto"></div>
       </div>
     </div>
@@ -2521,12 +2849,16 @@ function externalPendingSettlements(){
             payer:payer,
             payerIdx:payerIdx,
             amount:0,
-            items:0
+            items:0,
+            titles:[]
           };
         }
 
         grouped[key].amount+=amount;
         grouped[key].items+=1;
+        if(grouped[key].titles.indexOf(e.title)<0){
+          grouped[key].titles.push(e.title);
+        }
       });
     });
 
@@ -2537,16 +2869,20 @@ function externalPendingSettlements(){
       return a.name.localeCompare(b.name,'ko');
     });
 }
-
 function renderExternalSettlement(){
   var rows=externalPendingSettlements();
 
   qs('#externalSettlementList').innerHTML=rows.length
     ? rows.map(function(row){
+        var titleText=row.titles.slice(0,3).join(', ');
+        if(row.titles.length>3)titleText+=' 외 '+(row.titles.length-3)+'건';
+
         return '<div class="external-transfer">'+
           '<div class="external-transfer-main">'+
             '<b>'+esc(row.name)+'</b> → <b>'+esc(row.payer)+'</b>'+
-            '<div class="external-transfer-sub">미정산 '+row.items+'건</div>'+
+            '<div class="external-transfer-sub">'+
+              '미정산 '+row.items+'건'+(titleText?' · '+esc(titleText):'')+
+            '</div>'+
           '</div>'+
           '<strong>'+won(row.amount)+'</strong>'+
         '</div>';
@@ -2554,8 +2890,186 @@ function renderExternalSettlement(){
     : '<div class="empty" style="padding:20px">여행 외 사람에게 받을 미정산 금액이 없어요.</div>';
 }
 
+function settlementDebtChips(e){
+  var out=[];
+  var payerIdx=Number(e.payer);
+  var payer=state.config.people[payerIdx]||'미지정';
+
+  if(isDirect(e)){
+    state.config.people.forEach(function(name,i){
+      if(i===payerIdx)return;
+      var amount=directShareKRW(e,i);
+      if(amount>0){
+        out.push(
+          '<span class="settle-detail-chip">'+
+          esc(name)+' → '+esc(payer)+' '+won(amount)+
+          '</span>'
+        );
+      }
+    });
+
+    (e.externalSettlements||[]).forEach(function(row){
+      var name=((row&&row.name)||'').trim();
+      var amount=externalShareKRW(e,row);
+      if(name&&amount>0){
+        out.push(
+          '<span class="settle-detail-chip external">'+
+          esc(name)+' → '+esc(payer)+' '+won(amount)+
+          '</span>'
+        );
+      }
+    });
+  }else{
+    var ids=e.participants
+      .map(function(v,i){return v?i:null})
+      .filter(function(v){return v!==null});
+
+    var share=ids.length?getKRW(e)/ids.length:0;
+
+    ids.forEach(function(i){
+      if(i===payerIdx)return;
+      out.push(
+        '<span class="settle-detail-chip">'+
+        esc(state.config.people[i])+' → '+esc(payer)+' '+won(share)+
+        '</span>'
+      );
+    });
+  }
+
+  if(!out.length){
+    out.push('<span class="settle-detail-chip self">개인지출 · 별도 송금 없음</span>');
+  }
+
+  return out.join('');
+}
+
+function renderSettlementDetails(){
+  var rows=state.expenses
+    .filter(function(e){return !isCommon(e)})
+    .slice()
+    .sort(function(a,b){
+      if(a.date!==b.date)return a.date.localeCompare(b.date);
+      var ao=Number(a.sortOrder||0),bo=Number(b.sortOrder||0);
+      if(ao!==bo)return ao-bo;
+      return (a.createdAt||'').localeCompare(b.createdAt||'');
+    });
+
+  if(!rows.length){
+    qs('#settlementDetailList').innerHTML=
+      '<div class="empty" style="padding:20px">개인결제 내역이 없어요.</div>';
+    return;
+  }
+
+  var groups={};
+  rows.forEach(function(e){
+    if(!groups[e.date])groups[e.date]=[];
+    groups[e.date].push(e);
+  });
+
+  qs('#settlementDetailList').innerHTML=Object.keys(groups)
+    .sort()
+    .map(function(date){
+      var items=groups[date].map(function(e){
+        var payer=state.config.people[Number(e.payer)]||'미지정';
+        var note=(e.note||'').trim();
+
+        return '<div class="settle-detail-row '+(e.done?'is-done':'')+'">'+
+          '<div class="settle-detail-main">'+
+            '<div class="settle-detail-titleline">'+
+              '<span class="settle-detail-title">'+esc(e.title)+'</span>'+
+              '<span class="settle-detail-payer">'+esc(payer)+' 결제</span>'+
+              '<span class="settle-detail-status '+(e.done?'done':'')+'">'+
+                (e.done?'정산완료':'미정산')+
+              '</span>'+
+            '</div>'+
+            (note?'<div class="settle-detail-note">'+esc(note)+'</div>':'')+
+            '<div class="settle-detail-debts">'+settlementDebtChips(e)+'</div>'+
+          '</div>'+
+          '<div class="settle-detail-amount">'+
+            '<strong>'+won(getKRW(e))+'</strong>'+
+            '<span>'+yen(e.jpy)+'</span>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+
+      return '<div class="settle-day-group">'+
+        '<div class="settle-day-label">'+fmtDate(date)+'</div>'+
+        items+
+      '</div>';
+    }).join('');
+}
+
+function renderCommonDetails(){
+  var rows=state.expenses
+    .filter(isCommon)
+    .slice()
+    .sort(function(a,b){
+      if(a.date!==b.date)return a.date.localeCompare(b.date);
+      var ao=Number(a.sortOrder||0),bo=Number(b.sortOrder||0);
+      if(ao!==bo)return ao-bo;
+      return (a.createdAt||'').localeCompare(b.createdAt||'');
+    });
+
+  if(!rows.length){
+    qs('#commonDetailList').innerHTML=
+      '<div class="empty" style="padding:20px">공금 사용 내역이 없어요.</div>';
+    return;
+  }
+
+  qs('#commonDetailList').innerHTML=rows.map(function(e){
+    var ids=e.participants
+      .map(function(v,i){return v?i:null})
+      .filter(function(v){return v!==null});
+
+    var share=ids.length?Number(e.jpy||0)/ids.length:0;
+
+    var shares=ids.length
+      ? ids.map(function(i){
+          return '<span class="common-detail-share">'+
+            esc(state.config.people[i])+' '+yen(share)+
+          '</span>';
+        }).join('')
+      : '<span class="common-detail-share">부담자 없음</span>';
+
+    return '<div class="common-detail-row">'+
+      '<div>'+
+        '<div class="common-detail-title">'+esc(e.title)+'</div>'+
+        '<div class="common-detail-meta">'+fmtDate(e.date)+' · '+esc(e.category||'기타')+'</div>'+
+        '<div class="common-detail-shares">'+shares+'</div>'+
+      '</div>'+
+      '<div class="common-detail-amount">'+yen(e.jpy)+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function renderSettlementQuickStats(){
+  var personal=state.expenses.filter(function(e){return !isCommon(e)});
+  var open=personal.filter(function(e){return !e.done});
+  var done=personal.filter(function(e){return e.done});
+  var common=state.expenses.filter(isCommon);
+
+  qs('#settleQuickStats').innerHTML=
+    '<div class="settle-quick-stat">'+
+      '<div class="k">미정산 개인결제</div>'+
+      '<div class="v">'+open.length+'건</div>'+
+    '</div>'+
+    '<div class="settle-quick-stat">'+
+      '<div class="k">정산완료</div>'+
+      '<div class="v">'+done.length+'건</div>'+
+    '</div>'+
+    '<div class="settle-quick-stat">'+
+      '<div class="k">공금 사용</div>'+
+      '<div class="v">'+common.length+'건 · '+yen(common.reduce(function(a,e){return a+Number(e.jpy||0)},0))+'</div>'+
+    '</div>';
+}
+
 function renderSettlement(){
   if(activeTab!=='settle')return;
+
+  renderSettlementQuickStats();
+  renderSettlementDetails();
+  renderCommonDetails();
+
   var bal=personalBalances(),usage=commonUsage();
   qs('#personCards').innerHTML=state.config.people.map(function(p,i){
     var paid=state.expenses.filter(function(e){return String(e.payer)===String(i)}).reduce(function(a,e){return a+getKRW(e)},0);
