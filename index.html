@@ -2039,6 +2039,193 @@ body.reorder-mode .expense{
   }
 }
 
+
+/* ===== Expense card v12: show both receipt photos ===== */
+.expense.has-photo .expense-layout{
+  grid-template-columns:minmax(0,1fr) 146px !important;
+}
+
+.expense.has-photo .expense-side{
+  width:146px !important;
+}
+
+.expense-media{
+  width:146px !important;
+  height:70px !important;
+  flex:0 0 70px !important;
+  display:grid !important;
+  grid-template-columns:repeat(2,70px) !important;
+  gap:6px !important;
+  justify-content:end !important;
+  overflow:visible !important;
+  background:transparent !important;
+  border-radius:0 !important;
+}
+
+.expense-media.photo-count-1{
+  grid-template-columns:70px !important;
+}
+
+.expense-media img{
+  width:70px !important;
+  height:70px !important;
+  min-height:0 !important;
+  border-radius:11px !important;
+  object-fit:cover !important;
+  display:block !important;
+  cursor:pointer !important;
+}
+
+@media(max-width:680px){
+  .expense.has-photo .expense-layout{
+    grid-template-columns:minmax(0,1fr) 124px !important;
+    gap:8px !important;
+  }
+
+  .expense.has-photo .expense-side{
+    width:124px !important;
+  }
+
+  .expense-media{
+    width:124px !important;
+    height:59px !important;
+    flex-basis:59px !important;
+    grid-template-columns:repeat(2,59px) !important;
+    gap:6px !important;
+  }
+
+  .expense-media.photo-count-1{
+    grid-template-columns:59px !important;
+  }
+
+  .expense-media img{
+    width:59px !important;
+    height:59px !important;
+  }
+}
+
+@media(max-width:420px){
+  .expense.has-photo .expense-layout{
+    grid-template-columns:minmax(0,1fr) 110px !important;
+    gap:7px !important;
+  }
+
+  .expense.has-photo .expense-side{
+    width:110px !important;
+  }
+
+  .expense-media{
+    width:110px !important;
+    height:52px !important;
+    flex-basis:52px !important;
+    grid-template-columns:repeat(2,52px) !important;
+    gap:6px !important;
+  }
+
+  .expense-media.photo-count-1{
+    grid-template-columns:52px !important;
+  }
+
+  .expense-media img{
+    width:52px !important;
+    height:52px !important;
+  }
+}
+
+
+/* ===== v13: true settlement summary ===== */
+.summary-category-list{
+  display:grid;
+  gap:7px;
+}
+.summary-category-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:11px 12px;
+  border-radius:12px;
+  background:#f8f9fa;
+}
+.summary-category-main{
+  min-width:0;
+}
+.summary-category-top{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  flex-wrap:wrap;
+}
+.summary-category-name{
+  font-size:12.5px;
+  font-weight:900;
+  color:var(--text);
+}
+.summary-category-count{
+  font-size:9.5px;
+  font-weight:800;
+  color:#8b95a1;
+  background:#eef1f4;
+  border-radius:7px;
+  padding:4px 6px;
+}
+.summary-category-items{
+  margin-top:4px;
+  font-size:10.5px;
+  color:#8b95a1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.summary-category-amount{
+  text-align:right;
+  white-space:nowrap;
+}
+.summary-category-amount strong{
+  display:block;
+  font-size:13px;
+  color:var(--text);
+}
+.summary-category-amount span{
+  display:block;
+  margin-top:2px;
+  font-size:9.5px;
+  color:#8b95a1;
+}
+.summary-mini-note{
+  margin-top:8px;
+  padding:0 2px;
+  font-size:10px;
+  color:#98a1ad;
+  line-height:1.5;
+}
+.summary-status-line{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.summary-status-chip{
+  font-size:9.5px;
+  font-weight:800;
+  padding:5px 7px;
+  border-radius:8px;
+  background:#f2f4f6;
+  color:#6b7684;
+}
+@media(max-width:420px){
+  .summary-category-row{
+    padding:10px;
+  }
+  .summary-category-name{
+    font-size:12px;
+  }
+  .summary-category-amount strong{
+    font-size:12px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2128,8 +2315,8 @@ body.reorder-mode .expense{
 
         <div class="hr"></div>
         <div class="settle-section-head">
-          <h3>개인결제 정산 상세</h3>
-          <div class="sub">항목별로 왜 이 금액이 나왔는지 확인</div>
+          <h3>개인결제 요약</h3>
+          <div class="sub">카테고리별 건수와 금액만 간단히</div>
         </div>
         <div class="settle-detail-list" id="settlementDetailList"></div>
 
@@ -2142,8 +2329,8 @@ body.reorder-mode .expense{
 
         <div class="hr"></div>
         <div class="settle-section-head">
-          <h3>공금 사용 상세</h3>
-          <div class="sub">항목별 사용액과 각자 부담 몫</div>
+          <h3>공금 사용 요약</h3>
+          <div class="sub">어디에 얼마나 썼는지만 간단히</div>
         </div>
         <div class="common-detail-list" id="commonDetailList"></div>
 
@@ -2701,10 +2888,14 @@ function expenseHTML(e){
     }).join('');
   }
 
-  var photoList=(e.photos||[]).filter(Boolean);
+  var photoList=(e.photos||[]).filter(Boolean).slice(0,2);
   var hasPhoto=photoList.length>0;
   var photoHTML=hasPhoto
-    ? '<div class="expense-media"><img src="'+photoList[0]+'" data-photo="0" data-id="'+e.id+'" alt="첨부사진"></div>'
+    ? '<div class="expense-media photo-count-'+photoList.length+'">'+
+        photoList.map(function(src,i){
+          return '<img src="'+src+'" data-photo="'+i+'" data-id="'+e.id+'" alt="첨부사진 '+(i+1)+'">';
+        }).join('')+
+      '</div>'
     : '';
 
   var noteText=esc(e.note||'');
@@ -2944,15 +3135,7 @@ function settlementDebtChips(e){
 }
 
 function renderSettlementDetails(){
-  var rows=state.expenses
-    .filter(function(e){return !isCommon(e)})
-    .slice()
-    .sort(function(a,b){
-      if(a.date!==b.date)return a.date.localeCompare(b.date);
-      var ao=Number(a.sortOrder||0),bo=Number(b.sortOrder||0);
-      if(ao!==bo)return ao-bo;
-      return (a.createdAt||'').localeCompare(b.createdAt||'');
-    });
+  var rows=state.expenses.filter(function(e){return !isCommon(e)});
 
   if(!rows.length){
     qs('#settlementDetailList').innerHTML=
@@ -2961,54 +3144,67 @@ function renderSettlementDetails(){
   }
 
   var groups={};
+
   rows.forEach(function(e){
-    if(!groups[e.date])groups[e.date]=[];
-    groups[e.date].push(e);
+    var cat=(e.category||'기타').trim()||'기타';
+
+    if(!groups[cat]){
+      groups[cat]={
+        category:cat,
+        count:0,
+        totalKRW:0,
+        totalJPY:0,
+        open:0,
+        done:0,
+        titles:[]
+      };
+    }
+
+    var g=groups[cat];
+    g.count+=1;
+    g.totalKRW+=Number(getKRW(e)||0);
+    g.totalJPY+=Number(e.jpy||0);
+    if(e.done)g.done+=1;
+    else g.open+=1;
+
+    if(e.title && g.titles.indexOf(e.title)<0){
+      g.titles.push(e.title);
+    }
   });
 
-  qs('#settlementDetailList').innerHTML=Object.keys(groups)
-    .sort()
-    .map(function(date){
-      var items=groups[date].map(function(e){
-        var payer=state.config.people[Number(e.payer)]||'미지정';
-        var note=(e.note||'').trim();
+  var list=Object.keys(groups).map(function(k){return groups[k]});
+  list.sort(function(a,b){return b.totalKRW-a.totalKRW});
 
-        return '<div class="settle-detail-row '+(e.done?'is-done':'')+'">'+
-          '<div class="settle-detail-main">'+
-            '<div class="settle-detail-titleline">'+
-              '<span class="settle-detail-title">'+esc(e.title)+'</span>'+
-              '<span class="settle-detail-payer">'+esc(payer)+' 결제</span>'+
-              '<span class="settle-detail-status '+(e.done?'done':'')+'">'+
-                (e.done?'정산완료':'미정산')+
-              '</span>'+
+  qs('#settlementDetailList').innerHTML=
+    '<div class="summary-category-list">'+
+      list.map(function(g){
+        var shown=g.titles.slice(0,3);
+        var itemText=shown.join(' · ');
+        if(g.titles.length>3)itemText+=' 외 '+(g.titles.length-3)+'건';
+
+        return '<div class="summary-category-row">'+
+          '<div class="summary-category-main">'+
+            '<div class="summary-category-top">'+
+              '<span class="summary-category-name">'+esc(g.category)+'</span>'+
+              '<span class="summary-category-count">'+g.count+'건</span>'+
             '</div>'+
-            (note?'<div class="settle-detail-note">'+esc(note)+'</div>':'')+
-            '<div class="settle-detail-debts">'+settlementDebtChips(e)+'</div>'+
+            (itemText?'<div class="summary-category-items">'+esc(itemText)+'</div>':'')+
+            '<div class="summary-status-line">'+
+              (g.open?'<span class="summary-status-chip">미정산 '+g.open+'건</span>':'')+
+              (g.done?'<span class="summary-status-chip">완료 '+g.done+'건</span>':'')+
+            '</div>'+
           '</div>'+
-          '<div class="settle-detail-amount">'+
-            '<strong>'+won(getKRW(e))+'</strong>'+
-            '<span>'+yen(e.jpy)+'</span>'+
+          '<div class="summary-category-amount">'+
+            '<strong>'+won(g.totalKRW)+'</strong>'+
+            '<span>'+yen(g.totalJPY)+'</span>'+
           '</div>'+
         '</div>';
-      }).join('');
-
-      return '<div class="settle-day-group">'+
-        '<div class="settle-day-label">'+fmtDate(date)+'</div>'+
-        items+
-      '</div>';
-    }).join('');
+      }).join('')+
+    '</div>'+
+    '<div class="summary-mini-note">개별 항목은 지출내역 탭에서 확인하고, 여기서는 정산 규모만 한눈에 볼 수 있게 요약했어요.</div>';
 }
-
 function renderCommonDetails(){
-  var rows=state.expenses
-    .filter(isCommon)
-    .slice()
-    .sort(function(a,b){
-      if(a.date!==b.date)return a.date.localeCompare(b.date);
-      var ao=Number(a.sortOrder||0),bo=Number(b.sortOrder||0);
-      if(ao!==bo)return ao-bo;
-      return (a.createdAt||'').localeCompare(b.createdAt||'');
-    });
+  var rows=state.expenses.filter(isCommon);
 
   if(!rows.length){
     qs('#commonDetailList').innerHTML=
@@ -3016,37 +3212,61 @@ function renderCommonDetails(){
     return;
   }
 
-  qs('#commonDetailList').innerHTML=rows.map(function(e){
-    var ids=e.participants
-      .map(function(v,i){return v?i:null})
-      .filter(function(v){return v!==null});
+  var groups={};
 
-    var share=ids.length?Number(e.jpy||0)/ids.length:0;
+  rows.forEach(function(e){
+    var cat=(e.category||'기타').trim()||'기타';
 
-    var shares=ids.length
-      ? ids.map(function(i){
-          return '<span class="common-detail-share">'+
-            esc(state.config.people[i])+' '+yen(share)+
-          '</span>';
-        }).join('')
-      : '<span class="common-detail-share">부담자 없음</span>';
+    if(!groups[cat]){
+      groups[cat]={
+        category:cat,
+        count:0,
+        totalJPY:0,
+        titles:[]
+      };
+    }
 
-    return '<div class="common-detail-row">'+
-      '<div>'+
-        '<div class="common-detail-title">'+esc(e.title)+'</div>'+
-        '<div class="common-detail-meta">'+fmtDate(e.date)+' · '+esc(e.category||'기타')+'</div>'+
-        '<div class="common-detail-shares">'+shares+'</div>'+
-      '</div>'+
-      '<div class="common-detail-amount">'+yen(e.jpy)+'</div>'+
+    var g=groups[cat];
+    g.count+=1;
+    g.totalJPY+=Number(e.jpy||0);
+
+    if(e.title && g.titles.indexOf(e.title)<0){
+      g.titles.push(e.title);
+    }
+  });
+
+  var list=Object.keys(groups).map(function(k){return groups[k]});
+  list.sort(function(a,b){return b.totalJPY-a.totalJPY});
+
+  qs('#commonDetailList').innerHTML=
+    '<div class="summary-category-list">'+
+      list.map(function(g){
+        var shown=g.titles.slice(0,3);
+        var itemText=shown.join(' · ');
+        if(g.titles.length>3)itemText+=' 외 '+(g.titles.length-3)+'건';
+
+        return '<div class="summary-category-row">'+
+          '<div class="summary-category-main">'+
+            '<div class="summary-category-top">'+
+              '<span class="summary-category-name">'+esc(g.category)+'</span>'+
+              '<span class="summary-category-count">'+g.count+'건</span>'+
+            '</div>'+
+            (itemText?'<div class="summary-category-items">'+esc(itemText)+'</div>':'')+
+          '</div>'+
+          '<div class="summary-category-amount">'+
+            '<strong>'+yen(g.totalJPY)+'</strong>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
     '</div>';
-  }).join('');
 }
-
 function renderSettlementQuickStats(){
   var personal=state.expenses.filter(function(e){return !isCommon(e)});
   var open=personal.filter(function(e){return !e.done});
-  var done=personal.filter(function(e){return e.done});
   var common=state.expenses.filter(isCommon);
+
+  var openKRW=open.reduce(function(a,e){return a+Number(getKRW(e)||0)},0);
+  var commonJPY=common.reduce(function(a,e){return a+Number(e.jpy||0)},0);
 
   qs('#settleQuickStats').innerHTML=
     '<div class="settle-quick-stat">'+
@@ -3054,15 +3274,14 @@ function renderSettlementQuickStats(){
       '<div class="v">'+open.length+'건</div>'+
     '</div>'+
     '<div class="settle-quick-stat">'+
-      '<div class="k">정산완료</div>'+
-      '<div class="v">'+done.length+'건</div>'+
+      '<div class="k">미정산 결제 총액</div>'+
+      '<div class="v">'+won(openKRW)+'</div>'+
     '</div>'+
     '<div class="settle-quick-stat">'+
       '<div class="k">공금 사용</div>'+
-      '<div class="v">'+common.length+'건 · '+yen(common.reduce(function(a,e){return a+Number(e.jpy||0)},0))+'</div>'+
+      '<div class="v">'+yen(commonJPY)+'</div>'+
     '</div>';
 }
-
 function renderSettlement(){
   if(activeTab!=='settle')return;
 
