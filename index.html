@@ -3452,12 +3452,13 @@ function attachExpenseEvents(){
           openExpense(e);
         }else if(action==='delete'){
           if(confirm('"'+e.title+'" 항목을 삭제할까요?')){
+            var dr=await sb.from('trip_settle_up_expenses').delete().eq('id',id);
+            if(dr.error)throw dr.error;
+            // 항목이 지워진 뒤에 사진을 지움 (항목 삭제가 실패하면 사진은 그대로 남도록)
             if((e.photoPaths||[]).length){
               var sr=await sb.storage.from(BUCKET).remove(e.photoPaths);
               if(sr.error)console.warn(sr.error);
             }
-            var dr=await sb.from('trip_settle_up_expenses').delete().eq('id',id);
-            if(dr.error)throw dr.error;
             await loadData(true);toast('삭제했어요');
           }
         }
